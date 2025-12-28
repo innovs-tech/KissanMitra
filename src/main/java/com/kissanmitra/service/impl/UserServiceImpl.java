@@ -8,10 +8,21 @@ import com.kissanmitra.request.UserRequest;
 import com.kissanmitra.response.UserResponse;
 import com.kissanmitra.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
+/**
+ * Service implementation for user management.
+ *
+ * <p>Business Context:
+ * - Users are created on first OTP verification
+ * - User profile can be updated after creation
+ * - Roles are assigned by Admin or during profile setup
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -19,49 +30,106 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    public UserResponse ensureUserExistsOrSaveUser(String phoneNumber){
-        User user=userRepository.findByPhoneNumber(phoneNumber);
+    /**
+     * Ensures a user exists for the given phone number, creating one if necessary.
+     *
+     * <p>Business Decision:
+     * - Creates user with ACTIVE status on first OTP verification
+     * - Sets lastLoginAt timestamp
+     *
+     * @param phoneNumber phone number
+     * @return UserResponse
+     */
+    @Override
+    public UserResponse ensureUserExistsOrSaveUser(final String phoneNumber) {
+        User user = userRepository.findByPhone(phoneNumber);
 
-        if( user == null ){
-            user= User.builder()
-                    .phoneNumber(phoneNumber)
+        if (user == null) {
+            // BUSINESS DECISION: Create user with ACTIVE status on first login
+            user = User.builder()
+                    .phone(phoneNumber)
                     .status(UserStatus.ACTIVE)
-                    .createdAt(Instant.now())
-                    .updatedAt(Instant.now())
+                    .roles(List.of()) // Empty roles initially, assigned later
                     .build();
-            user=userRepository.save(user);
+            user = userRepository.save(user);
+            log.info("Created new user with phone: {}", phoneNumber);
+        } else {
+            // Update last login timestamp
+            user.setLastLoginAt(Instant.now());
+            user = userRepository.save(user);
         }
-        return userMapper.mapToResponse(user);
 
+        return userMapper.mapToResponse(user);
     }
 
-    public UserResponse updateUserInfo(UserRequest userRequest) {
-
-        User existingUser = userRepository.findByPhoneNumber(userRequest.getPhoneNumber());
+    /**
+     * Updates user information.
+     *
+     * <p>Business Decision:
+     * - Supports partial updates (only provided fields are updated)
+     * - Android app can send either defaultLocation or pincode
+     * - Can be called in background to update location as needed
+     *
+     * @param userRequest user update request
+     * @return updated UserResponse
+     */
+    @Override
+    public UserResponse updateUserInfo(final UserRequest userRequest) {
+        final User existingUser = userRepository.findByPhone(userRequest.getPhoneNumber());
 
         if (existingUser == null) {
             throw new RuntimeException("User not found");
         }
 
-        User updatedUser = existingUser.toBuilder()
-                .name(userRequest.getName() != null ? userRequest.getName() : existingUser.getName())
-                .address(userRequest.getAddress() != null ? userRequest.getAddress() : existingUser.getAddress())
-                .pinCode(userRequest.getPinCode() != null ? userRequest.getPinCode() : existingUser.getPinCode())
-                .companyId(userRequest.getCompanyId() != null ? userRequest.getCompanyId() : existingUser.getCompanyId())
-                .role(userRequest.getRole() != null ? userRequest.getRole() : existingUser.getRole())
-                .updatedAt(Instant.now())
-                .build();
+        // Update only provided fields
+        final User.UserBuilder<?, ?> builder = existingUser.toBuilder();
 
-        updatedUser=userRepository.save(updatedUser);
+        // Build or update profile
+        com.kissanmitra.dto.UserProfile.UserProfileBuilder profileBuilder;
+        if (existingUser.getProfile() != null) {
+            profileBuilder = existingUser.getProfile().toBuilder();
+        } else {
+            profileBuilder = com.kissanmitra.dto.UserProfile.builder();
+        }
 
-        return  userMapper.mapToResponse(updatedUser);
+        // Update name if provided
+        if (userRequest.getName() != null && !userRequest.getName().trim().isEmpty()) {
+            profileBuilder.name(userRequest.getName().trim());
+            log.debug("Updating name for user: {}", userRequest.getPhoneNumber());
+        }
+
+        // Update defaultLocation if provided (Android app sends this when permission granted)
+        if (userRequest.getDefaultLocation() != null) {
+            profileBuilder.defaultLocation(userRequest.getDefaultLocation());
+            log.debug("Updating defaultLocation for user: {}", userRequest.getPhoneNumber());
+        }
+
+        // Update pincode if provided (Android app sends this when permission denied)
+        if (userRequest.getPincode() != null && !userRequest.getPincode().trim().isEmpty()) {
+            profileBuilder.pincode(userRequest.getPincode().trim());
+            log.debug("Updating pincode for user: {}", userRequest.getPhoneNumber());
+        }
+
+        builder.profile(profileBuilder.build());
+
+        final User updatedUser = builder.build();
+        final User savedUser = userRepository.save(updatedUser);
+
+        log.info("Updated user profile for user: {}", userRequest.getPhoneNumber());
+        return userMapper.mapToResponse(savedUser);
     }
 
+    /**
+     * Gets user by user ID.
+     *
+     * @param id user ID
+     * @return UserResponse
+     */
+    @Override
+    public UserResponse getUserByUserId(final String id) {
+        final User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    public UserResponse getUserByUserId(String id){
-     User user=userRepository.findById(id).orElseThrow(
-             ()-> new RuntimeException("User Not found"));
-
-     return userMapper.mapToResponse(user);
+        return userMapper.mapToResponse(user);
     }
 }
