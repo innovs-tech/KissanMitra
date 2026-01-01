@@ -70,7 +70,7 @@ class OrderServiceTest {
         testDevice = Device.builder()
                 .id(TEST_DEVICE_ID)
                 .deviceTypeId("device-type-id")
-                .status(DeviceStatus.WORKING)
+                .status(DeviceStatus.LIVE)
                 .build();
 
         createRequest = CreateOrderRequest.builder()
@@ -125,7 +125,7 @@ class OrderServiceTest {
     @Test
     void testCreateOrder_DeviceNotAvailable() {
         // Given
-        testDevice.setStatus(DeviceStatus.NOT_WORKING);
+        testDevice.setStatus(DeviceStatus.NOT_LIVE);
         when(deviceRepository.findById(TEST_DEVICE_ID)).thenReturn(Optional.of(testDevice));
 
         // When & Then

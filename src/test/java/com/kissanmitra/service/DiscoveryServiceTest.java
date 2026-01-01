@@ -55,7 +55,8 @@ class DiscoveryServiceTest {
         testDevice = Device.builder()
                 .id("device-id")
                 .deviceTypeId("device-type-id")
-                .status(DeviceStatus.WORKING)
+                .pincode("560001")
+                .status(DeviceStatus.LIVE)
                 .location(new Point(77.5946, 12.9716))
                 .build();
 
@@ -78,9 +79,11 @@ class DiscoveryServiceTest {
     @Test
     void testSearchDevices_Success() {
         // Given
-        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.WORKING)))
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
                 .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
         when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
+        when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
 
         // When
         DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
@@ -94,30 +97,43 @@ class DiscoveryServiceTest {
     }
 
     @Test
-    void testSearchDevices_FiltersNonWorkingDevices() {
+    void testSearchDevices_FiltersNonLiveDevices() {
         // Given
-        Device nonWorkingDevice = Device.builder()
-                .id("device-2")
-                .status(DeviceStatus.NOT_WORKING)
-                .build();
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice)); // Repository already filters by LIVE status
 
-        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.WORKING)))
-                .thenReturn(List.of(testDevice)); // Repository already filters by WORKING status
-
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
         when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
+        when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
 
         // When
         DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
 
         // Then
-        assertEquals(1, result.getResults().size()); // Only WORKING device included
+        assertEquals(1, result.getResults().size()); // Only LIVE device included
         assertEquals("device-id", result.getResults().get(0).getDeviceId());
+    }
+
+    @Test
+    void testSearchDevices_FiltersDevicesWithoutPricingRules() {
+        // Given
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+
+        // Device has no pricing rule
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(false);
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertEquals(0, result.getResults().size()); // Device excluded due to no pricing rule
     }
 
     @Test
     void testSearchDevices_NoResults() {
         // Given
-        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.WORKING)))
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
                 .thenReturn(Collections.emptyList());
 
         // When
@@ -126,6 +142,33 @@ class DiscoveryServiceTest {
         // Then
         assertNotNull(result);
         assertTrue(result.getResults().isEmpty());
+    }
+
+    @Test
+    void testSearchDevices_Pagination() {
+        // Given
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
+        when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
+        when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
+
+        DiscoverySearchRequest.SearchFilters filters = DiscoverySearchRequest.SearchFilters.builder()
+                .page(0)
+                .pageSize(10)
+                .build();
+        searchRequest.setFilters(filters);
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getResults().size());
+        assertNotNull(result.getPage());
+        assertNotNull(result.getPageSize());
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getPageSize());
     }
 
     @Test

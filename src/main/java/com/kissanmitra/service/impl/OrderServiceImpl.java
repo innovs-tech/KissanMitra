@@ -68,8 +68,8 @@ public class OrderServiceImpl implements OrderService {
         final Device device = deviceRepository.findById(request.getDeviceId())
                 .orElseThrow(() -> new RuntimeException("Device not found"));
 
-        // BUSINESS DECISION: Only WORKING devices can be ordered
-        if (device.getStatus() != com.kissanmitra.domain.enums.DeviceStatus.WORKING) {
+        // BUSINESS DECISION: Only LIVE devices can be ordered
+        if (device.getStatus() != com.kissanmitra.domain.enums.DeviceStatus.LIVE) {
             throw new RuntimeException("Device is not available for ordering");
         }
 

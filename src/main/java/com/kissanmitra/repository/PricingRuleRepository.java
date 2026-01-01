@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository for PricingRule entity.
@@ -29,5 +30,53 @@ public interface PricingRuleRepository extends MongoRepository<PricingRule, Stri
             LocalDate date,
             LocalDate date2
     );
+
+    /**
+     * Finds default rule (effectiveTo = null) for device type and pincode.
+     *
+     * @param deviceTypeId device type ID
+     * @param pincode pincode
+     * @param status status
+     * @return default rule or empty
+     */
+    Optional<PricingRule> findByDeviceTypeIdAndPincodeAndStatusAndEffectiveToIsNull(
+            String deviceTypeId, String pincode, String status);
+
+    /**
+     * Finds active time-specific rules for date.
+     * Rules where date is between effectiveFrom and effectiveTo (or effectiveTo is null).
+     *
+     * @param deviceTypeId device type ID
+     * @param pincode pincode
+     * @param date date to check
+     * @param status status
+     * @return list of active time-specific rules
+     */
+    List<PricingRule> findByDeviceTypeIdAndPincodeAndStatusAndEffectiveFromLessThanEqualAndEffectiveToIsNotNullAndEffectiveToGreaterThanEqual(
+            String deviceTypeId, String pincode, String status, LocalDate date, LocalDate date2);
+
+    /**
+     * Finds overlapping time-specific rules.
+     * Rules where date ranges overlap with the given range.
+     *
+     * @param deviceTypeId device type ID
+     * @param pincode pincode
+     * @param from start date
+     * @param to end date
+     * @param status status
+     * @return list of overlapping rules
+     */
+    List<PricingRule> findByDeviceTypeIdAndPincodeAndStatusAndEffectiveToIsNotNullAndEffectiveFromLessThanEqualAndEffectiveToGreaterThanEqual(
+            String deviceTypeId, String pincode, String status, LocalDate to, LocalDate from);
+
+    /**
+     * Finds all active rules (default + time-specific) for device type and pincode.
+     *
+     * @param deviceTypeId device type ID
+     * @param pincode pincode
+     * @param status status
+     * @return list of all active rules
+     */
+    List<PricingRule> findByDeviceTypeIdAndPincodeAndStatus(String deviceTypeId, String pincode, String status);
 }
 

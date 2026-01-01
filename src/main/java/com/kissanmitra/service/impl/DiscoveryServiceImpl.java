@@ -18,7 +18,6 @@ import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +36,9 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     private static final int INTENT_TTL_MINUTES = 30;
     private static final String INTENT_STATUS_CREATED = "CREATED";
+    private static final double DEFAULT_RADIUS_KM = 50.0; // Default search radius
+    private static final int DEFAULT_PAGE_SIZE = 10; // Default pagination
+    private static final int MAX_PAGE_SIZE = 20; // Maximum pagination
 
     private final DeviceRepository deviceRepository;
     private final DiscoveryIntentRepository discoveryIntentRepository;
@@ -44,6 +46,19 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     /**
      * Searches for devices based on location and filters.
+     *
+     * <p>Business Context:
+     * - Uses lat/lng for both customer location and device location
+     * - Default search radius: 50km (configurable)
+     * - Only LIVE devices with active pricing rules appear in discovery
+     * - Pagination: default 10 per page, max 20 per page
+     *
+     * <p>Uber Logic:
+     * - Filters by status = LIVE
+     * - Filters by active pricing rule exists (double validation)
+     * - Calculates distance using Haversine formula
+     * - Uses device pincode for pricing lookup
+     * - Excludes devices without pricing rules from results
      *
      * @param request discovery search request
      * @return discovery response with device results
@@ -53,38 +68,87 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         // Convert location to Point
         final Point location = getLocationPoint(request.getLocation());
         if (location == null) {
-            throw new RuntimeException("Location is required (lat/lng or pincode)");
+            throw new RuntimeException("Location is required (lat/lng)");
         }
 
-        // Calculate search radius
+        // Calculate search radius (default 50km)
         final double radiusKm = request.getFilters() != null && request.getFilters().getRadiusKm() != null
                 ? request.getFilters().getRadiusKm()
-                : 25.0; // Default 25km
+                : DEFAULT_RADIUS_KM;
 
         final Distance distance = new Distance(radiusKm, Metrics.KILOMETERS);
 
-        // Search devices near location
+        // BUSINESS DECISION: Only LIVE devices appear in discovery
+        // Search devices near location with status = LIVE
         List<Device> devices = deviceRepository.findByLocationNearAndStatus(
                 location,
                 distance,
-                DeviceStatus.WORKING
+                DeviceStatus.LIVE
         );
 
         // Filter by device type if specified
         if (request.getFilters() != null && request.getFilters().getDeviceType() != null) {
             devices = devices.stream()
-                    .filter(d -> d.getDeviceTypeId().equals(request.getFilters().getDeviceType()))
+                    .filter(d -> d.getDeviceTypeId() != null
+                            && d.getDeviceTypeId().equals(request.getFilters().getDeviceType()))
                     .collect(Collectors.toList());
         }
 
+        // BUSINESS DECISION: Double validation - filter by active pricing rule exists
+        // Devices without pricing rules are excluded from results (even if status is LIVE)
+        devices = devices.stream()
+                .filter(device -> {
+                    if (device.getDeviceTypeId() == null || device.getPincode() == null) {
+                        return false;
+                    }
+                    // Check if active pricing rule exists
+                    final boolean hasPricingRule = pricingService.hasActivePricingRule(
+                            device.getDeviceTypeId(), device.getPincode());
+                    if (!hasPricingRule) {
+                        log.debug("Excluding device {} from discovery - no active pricing rule", device.getId());
+                    }
+                    return hasPricingRule;
+                })
+                .collect(Collectors.toList());
+
+        // Apply pagination
+        final int pageSize = getPageSize(request);
+        final int page = getPage(request);
+        final int start = page * pageSize;
+        final int end = Math.min(start + pageSize, devices.size());
+        final List<Device> pagedDevices = devices.subList(Math.min(start, devices.size()), end);
+
         // Convert to response
-        final List<DiscoveryResponse.DeviceResult> results = devices.stream()
+        final List<DiscoveryResponse.DeviceResult> results = pagedDevices.stream()
                 .map(device -> mapToDeviceResult(device, location, request))
                 .collect(Collectors.toList());
 
         return DiscoveryResponse.builder()
                 .results(results)
+                .totalCount(devices.size())
+                .page(page)
+                .pageSize(pageSize)
                 .build();
+    }
+
+    /**
+     * Gets page size from request (default 10, max 20).
+     */
+    private int getPageSize(final DiscoverySearchRequest request) {
+        if (request.getFilters() == null || request.getFilters().getPageSize() == null) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(Math.max(1, request.getFilters().getPageSize()), MAX_PAGE_SIZE);
+    }
+
+    /**
+     * Gets page number from request (default 0).
+     */
+    private int getPage(final DiscoverySearchRequest request) {
+        if (request.getFilters() == null || request.getFilters().getPage() == null) {
+            return 0;
+        }
+        return Math.max(0, request.getFilters().getPage());
     }
 
     /**
@@ -166,7 +230,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 .deviceType(device.getDeviceTypeId())
                 .distanceKm(distanceKm)
                 .location(DiscoveryResponse.LocationInfo.builder()
-                        .pincode(device.getLocation() != null ? "N/A" : null) // TODO: Extract pincode from location
+                        .pincode(device.getPincode()) // BUSINESS DECISION: Use device.pincode (not "N/A")
                         .build())
                 .leaseState(device.getCurrentLeaseId() != null ? "LEASED" : "AVAILABLE")
                 .indicativeRate(indicativeRate)
@@ -187,25 +251,40 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         return earthRadius * c;
     }
 
+    /**
+     * Gets indicative pricing rate for device.
+     *
+     * <p>Business Decision:
+     * - Uses device.pincode for pricing lookup (not "N/A")
+     * - Returns null if no active rule found (not 0.0)
+     * - Devices without pricing rules are excluded from discovery results
+     *
+     * @param device device to get pricing for
+     * @return indicative rate or null
+     */
     private DiscoveryResponse.IndicativeRate getIndicativeRate(final Device device) {
-        // Get pricing rules for device
+        if (device.getDeviceTypeId() == null || device.getPincode() == null) {
+            log.warn("Device {} missing deviceTypeId or pincode", device.getId());
+            return null;
+        }
+
         try {
-            final List<PricingRule> rules = pricingService.getPricingRules(device.getDeviceTypeId(), "N/A");
-            if (!rules.isEmpty() && !rules.get(0).getRules().isEmpty()) {
-                final var firstRule = rules.get(0).getRules().get(0);
+            // BUSINESS DECISION: Use device.pincode for pricing lookup
+            final PricingRule activeRule = pricingService.getActivePricingForDevice(device.getId(), java.time.LocalDate.now());
+            if (activeRule != null && activeRule.getRules() != null && !activeRule.getRules().isEmpty()) {
+                final var firstRule = activeRule.getRules().get(0);
                 return DiscoveryResponse.IndicativeRate.builder()
                         .type(firstRule.getMetric().name())
                         .amount(firstRule.getRate())
                         .build();
             }
         } catch (Exception e) {
-            log.warn("Could not get pricing for device: {}", e.getMessage());
+            log.warn("Could not get pricing for device {}: {}", device.getId(), e.getMessage());
         }
 
-        return DiscoveryResponse.IndicativeRate.builder()
-                .type("PER_HOUR")
-                .amount(0.0)
-                .build();
+        // BUSINESS DECISION: Return null if no pricing rule found (not 0.0)
+        // Devices without pricing rules are excluded from discovery results
+        return null;
     }
 }
 

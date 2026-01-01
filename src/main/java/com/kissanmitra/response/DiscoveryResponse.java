@@ -24,6 +24,21 @@ public class DiscoveryResponse {
     private List<DeviceResult> results;
 
     /**
+     * Total count of devices matching search criteria.
+     */
+    private Integer totalCount;
+
+    /**
+     * Current page number (0-based).
+     */
+    private Integer page;
+
+    /**
+     * Page size.
+     */
+    private Integer pageSize;
+
+    /**
      * Device result in discovery.
      */
     @Getter

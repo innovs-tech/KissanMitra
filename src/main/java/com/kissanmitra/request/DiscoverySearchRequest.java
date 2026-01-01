@@ -69,6 +69,8 @@ public class DiscoverySearchRequest {
     public static class SearchFilters {
         private String deviceType;
         private Double radiusKm;
+        private Integer page; // Page number (0-based, default 0)
+        private Integer pageSize; // Page size (default 10, max 20)
     }
 }
 

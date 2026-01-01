@@ -1,8 +1,10 @@
 package com.kissanmitra.service.impl;
 
 import com.kissanmitra.domain.enums.OrderType;
+import com.kissanmitra.entity.Device;
 import com.kissanmitra.entity.PricingRule;
 import com.kissanmitra.entity.ThresholdConfig;
+import com.kissanmitra.repository.DeviceRepository;
 import com.kissanmitra.repository.PricingRuleRepository;
 import com.kissanmitra.repository.ThresholdConfigRepository;
 import com.kissanmitra.service.PricingService;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,6 +32,7 @@ public class PricingServiceImpl implements PricingService {
 
     private final ThresholdConfigRepository thresholdConfigRepository;
     private final PricingRuleRepository pricingRuleRepository;
+    private final DeviceRepository deviceRepository;
 
     /**
      * Derives order type based on requested hours/acres and thresholds.
@@ -89,6 +93,74 @@ public class PricingServiceImpl implements PricingService {
         return thresholdConfigRepository
                 .findByDeviceTypeIdAndStatus(deviceTypeId, ACTIVE_STATUS)
                 .orElseThrow(() -> new RuntimeException("Threshold config not found for device type: " + deviceTypeId));
+    }
+
+    @Override
+    public PricingRule getPricingForDevice(final String deviceId) {
+        return getActivePricingForDevice(deviceId, LocalDate.now());
+    }
+
+    @Override
+    public PricingRule getActivePricingForDevice(final String deviceId, final LocalDate date) {
+        final Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
+
+        if (device.getDeviceTypeId() == null || device.getPincode() == null) {
+            log.warn("Device {} missing deviceTypeId or pincode", deviceId);
+            return null;
+        }
+
+        // BUSINESS DECISION: Check time-specific rules first, then default rule
+        // Time-specific rules take precedence if date matches
+        final List<PricingRule> timeSpecificRules = getTimeSpecificRules(
+                device.getDeviceTypeId(), device.getPincode(), date);
+
+        if (!timeSpecificRules.isEmpty()) {
+            // Return first matching time-specific rule
+            return timeSpecificRules.get(0);
+        }
+
+        // Fall back to default rule
+        return getDefaultRule(device.getDeviceTypeId(), device.getPincode());
+    }
+
+    @Override
+    public boolean hasActivePricingRule(final String deviceTypeId, final String pincode) {
+        final PricingRule defaultRule = getDefaultRule(deviceTypeId, pincode);
+        return defaultRule != null;
+    }
+
+    @Override
+    public List<PricingRule> checkForConflicts(final PricingRule newRule) {
+        if (newRule.getEffectiveTo() == null) {
+            // Default rule - check if one already exists
+            final PricingRule existing = getDefaultRule(newRule.getDeviceTypeId(), newRule.getPincode());
+            return existing != null ? List.of(existing) : new ArrayList<>();
+        }
+
+        // Time-specific rule - check for overlapping date ranges
+        return pricingRuleRepository.findByDeviceTypeIdAndPincodeAndStatusAndEffectiveToIsNotNullAndEffectiveFromLessThanEqualAndEffectiveToGreaterThanEqual(
+                newRule.getDeviceTypeId(),
+                newRule.getPincode(),
+                ACTIVE_STATUS,
+                newRule.getEffectiveTo(),
+                newRule.getEffectiveFrom()
+        );
+    }
+
+    @Override
+    public PricingRule getDefaultRule(final String deviceTypeId, final String pincode) {
+        return pricingRuleRepository
+                .findByDeviceTypeIdAndPincodeAndStatusAndEffectiveToIsNull(deviceTypeId, pincode, ACTIVE_STATUS)
+                .orElse(null);
+    }
+
+    @Override
+    public List<PricingRule> getTimeSpecificRules(
+            final String deviceTypeId, final String pincode, final LocalDate date) {
+        return pricingRuleRepository
+                .findByDeviceTypeIdAndPincodeAndStatusAndEffectiveFromLessThanEqualAndEffectiveToIsNotNullAndEffectiveToGreaterThanEqual(
+                        deviceTypeId, pincode, ACTIVE_STATUS, date, date);
     }
 }
 
