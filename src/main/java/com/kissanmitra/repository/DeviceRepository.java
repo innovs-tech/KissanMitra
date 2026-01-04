@@ -42,5 +42,21 @@ public interface DeviceRepository extends MongoRepository<Device, String> {
      * @return list of devices
      */
     List<Device> findByDeviceTypeIdAndStatus(String deviceTypeId, DeviceStatus status);
+
+    /**
+     * Counts devices by device type code.
+     *
+     * @param deviceTypeId device type code
+     * @return count of devices
+     */
+    long countByDeviceTypeId(String deviceTypeId);
+
+    /**
+     * Counts devices by manufacturer code.
+     *
+     * @param manufacturerId manufacturer code
+     * @return count of devices
+     */
+    long countByManufacturerId(String manufacturerId);
 }
 

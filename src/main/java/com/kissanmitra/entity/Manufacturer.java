@@ -14,6 +14,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *
  * <p>Represents manufacturers/vendors of equipment (e.g., Mahindra, John Deere).
  * Used as reference data for devices.
+ *
+ * <p>Business Context:
+ * - Code is immutable identifier (e.g., "MAHINDRA", "JOHN_DEERE")
+ * - Name is editable display value (e.g., "Mahindra Tractors")
+ * - Code is used as reference in Device.manufacturerId
  */
 @SuperBuilder(toBuilder = true)
 @AllArgsConstructor
@@ -24,10 +29,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Manufacturer extends BaseEntity {
 
     /**
-     * Manufacturer name (e.g., Mahindra, John Deere).
-     * Unique identifier for the manufacturer.
+     * Manufacturer code (e.g., MAHINDRA, JOHN_DEERE).
+     * Immutable unique identifier used as reference in Device.manufacturerId.
      */
     @Indexed(unique = true)
+    private String code;
+
+    /**
+     * Manufacturer display name (e.g., "Mahindra Tractors", "John Deere India").
+     * Editable value that can be updated without breaking references.
+     */
     private String name;
 
     /**

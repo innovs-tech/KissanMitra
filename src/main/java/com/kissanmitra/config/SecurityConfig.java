@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/public/**").permitAll() // Master data dropdowns
                         .requestMatchers("/public/**").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()

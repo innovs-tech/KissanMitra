@@ -20,5 +20,13 @@ public interface ThresholdConfigRepository extends MongoRepository<ThresholdConf
      * @return Optional ThresholdConfig
      */
     Optional<ThresholdConfig> findByDeviceTypeIdAndStatus(String deviceTypeId, String status);
+
+    /**
+     * Counts threshold configs by device type code.
+     *
+     * @param deviceTypeId device type code
+     * @return count of threshold configs
+     */
+    long countByDeviceTypeId(String deviceTypeId);
 }
 

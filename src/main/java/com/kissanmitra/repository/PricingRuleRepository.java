@@ -78,5 +78,13 @@ public interface PricingRuleRepository extends MongoRepository<PricingRule, Stri
      * @return list of all active rules
      */
     List<PricingRule> findByDeviceTypeIdAndPincodeAndStatus(String deviceTypeId, String pincode, String status);
+
+    /**
+     * Counts pricing rules by device type code.
+     *
+     * @param deviceTypeId device type code
+     * @return count of pricing rules
+     */
+    long countByDeviceTypeId(String deviceTypeId);
 }
 

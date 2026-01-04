@@ -9,6 +9,7 @@ import com.kissanmitra.repository.PricingRuleRepository;
 import com.kissanmitra.request.DeviceFinalizeRequest;
 import com.kissanmitra.request.DeviceOnboardStep1Request;
 import com.kissanmitra.request.DevicePricingRuleRequest;
+import com.kissanmitra.service.MasterDataValidationService;
 import com.kissanmitra.service.MediaUploadService;
 import com.kissanmitra.service.PricingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,9 @@ class DeviceControllerTest {
 
     @Mock
     private PricingRuleRepository pricingRuleRepository;
+
+    @Mock
+    private MasterDataValidationService masterDataValidationService;
 
     @InjectMocks
     private DeviceController deviceController;
@@ -94,6 +98,7 @@ class DeviceControllerTest {
     @Test
     void testOnboardStep1_Success() {
         // Given
+        doNothing().when(masterDataValidationService).validateDeviceTypeAndManufacturer(anyString(), anyString());
         when(deviceRepository.save(any(Device.class))).thenReturn(testDevice);
 
         // When

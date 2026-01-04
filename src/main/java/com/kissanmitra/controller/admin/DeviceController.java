@@ -12,6 +12,7 @@ import com.kissanmitra.request.DevicePricingRuleRequest;
 import com.kissanmitra.response.BaseClientResponse;
 import com.kissanmitra.response.DeviceOnboardSummaryResponse;
 import com.kissanmitra.response.DevicePricingStatusResponse;
+import com.kissanmitra.service.MasterDataValidationService;
 import com.kissanmitra.service.MediaUploadService;
 import com.kissanmitra.service.PricingService;
 import jakarta.validation.Valid;
@@ -52,6 +53,7 @@ public class DeviceController {
     private final MediaUploadService mediaUploadService;
     private final PricingService pricingService;
     private final PricingRuleRepository pricingRuleRepository;
+    private final MasterDataValidationService masterDataValidationService;
 
     /**
      * Step 1: Basic Equipment Details Entry.
@@ -72,6 +74,12 @@ public class DeviceController {
      */
     @PostMapping("/onboard/step1")
     public BaseClientResponse<Device> onboardStep1(@Valid @RequestBody final DeviceOnboardStep1Request request) {
+        // BUSINESS DECISION: Validate device type and manufacturer exist and are active
+        masterDataValidationService.validateDeviceTypeAndManufacturer(
+                request.getDeviceTypeId(),
+                request.getManufacturerId()
+        );
+
         // Extract pincode from address
         final String pincode = request.getAddress() != null && request.getAddress().getPinCode() != null
                 ? request.getAddress().getPinCode()

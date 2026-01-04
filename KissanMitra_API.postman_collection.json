@@ -59,7 +59,49 @@
 						},
 						"description": "Sends OTP to the specified phone number for authentication."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/send-otp?phoneNumber=+919876543210",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"send-otp"
+									],
+									"query": [
+										{
+											"key": "phoneNumber",
+											"value": "+919876543210"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": \"OTP sent successfully\",\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Verify OTP",
@@ -121,7 +163,52 @@
 						},
 						"description": "Verifies OTP and returns JWT token. Token is automatically saved to environment variable."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"phoneNumber\": \"+919876543210\",\n    \"otp\": \"123456\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/verify-otp",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-otp"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n        \"user\": {\n            \"id\": \"user-id\",\n            \"phoneNumber\": \"+919876543210\",\n            \"roles\": [\"FARMER\", \"VLE\"],\n            \"activeRole\": null\n        }\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Select Active Role",
@@ -188,9 +275,55 @@
 								"role"
 							]
 						},
-						"description": "Selects active role for the session. Returns new JWT token with updated role."
+						"description": "Selects active role for the session. Returns new JWT token with updated role. Role must be one of: FARMER, VLE, ADMIN."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"activeRole\": \"FARMER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/session/role",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"session",
+										"role"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Get Current User",
@@ -240,7 +373,38 @@
 						},
 						"description": "Gets current authenticated user details."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"user-id\",\n        \"phoneNumber\": \"+919876543210\",\n        \"name\": \"John Doe\",\n        \"roles\": [\"FARMER\", \"VLE\"],\n        \"activeRole\": \"FARMER\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				}
 			],
 			"description": "Authentication endpoints for OTP-based login and role management."
@@ -302,9 +466,53 @@
 								"search"
 							]
 						},
-						"description": "Searches for devices based on location and filters. No authentication required."
+						"description": "Searches for devices based on location and filters. No authentication required. Returns only LIVE devices with active pricing rules."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"location\": {\n        \"lat\": 12.9716,\n        \"lng\": 77.5946\n    },\n    \"filters\": {\n        \"radiusKm\": 10.0,\n        \"deviceType\": null\n    },\n    \"intent\": {\n        \"requestedHours\": 5.0,\n        \"requestedAcres\": 2.0\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/public/discovery/search",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"public",
+										"discovery",
+										"search"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"results\": [\n            {\n                \"deviceId\": \"device-id\",\n                \"name\": \"Heavy Duty Tractor\",\n                \"deviceTypeId\": \"TRACTOR\",\n                \"manufacturerId\": \"MAHINDRA\",\n                \"primaryMediaUrl\": \"https://s3.../image1.jpg\",\n                \"distanceKm\": 2.5,\n                \"pricing\": {\n                    \"perHour\": 500.0,\n                    \"perAcre\": 2000.0\n                },\n                \"location\": {\n                    \"address\": {\n                        \"city\": \"Bangalore\",\n                        \"state\": \"Karnataka\"\n                    },\n                    \"pincode\": \"560001\"\n                }\n            }\n        ],\n        \"total\": 1,\n        \"page\": 0,\n        \"size\": 10\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Create Discovery Intent",
@@ -373,10 +581,173 @@
 						},
 						"description": "Creates a discovery intent for pre-login interest. No authentication required."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/public/discovery/intents?deviceId=device-id&intentType=RENT&requestedHours=5.0&requestedAcres=2.0",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"public",
+										"discovery",
+										"intents"
+									],
+									"query": [
+										{
+											"key": "deviceId",
+											"value": "device-id"
+										},
+										{
+											"key": "intentType",
+											"value": "RENT"
+										},
+										{
+											"key": "requestedHours",
+											"value": "5.0"
+										},
+										{
+											"key": "requestedAcres",
+											"value": "2.0"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": \"intent-id\",\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				}
 			],
 			"description": "Public discovery endpoints for browsing equipment before login."
+		},
+		{
+			"name": "Public",
+			"item": [
+				{
+					"name": "Get Active Device Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/device-types",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"device-types"
+							]
+						},
+						"description": "Gets active device types for dropdown. No authentication required. Returns code + displayName pairs."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/public/device-types",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"public",
+										"device-types"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"code\": \"TRACTOR\",\n            \"displayName\": \"Heavy Duty Tractor\",\n            \"active\": true\n        },\n        {\n            \"code\": \"HARVESTER\",\n            \"displayName\": \"Combine Harvester\",\n            \"active\": true\n        },\n        {\n            \"code\": \"CULTIVATOR\",\n            \"displayName\": \"Rotary Cultivator\",\n            \"active\": true\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Active Manufacturers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/manufacturers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"manufacturers"
+							]
+						},
+						"description": "Gets active manufacturers for dropdown. No authentication required. Returns code + name pairs."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/public/manufacturers",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"public",
+										"manufacturers"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"code\": \"MAHINDRA\",\n            \"displayName\": \"Mahindra Tractors\",\n            \"active\": true\n        },\n        {\n            \"code\": \"JOHN_DEERE\",\n            \"displayName\": \"John Deere India\",\n            \"active\": true\n        },\n        {\n            \"code\": \"SWARAJ\",\n            \"displayName\": \"Swaraj Tractors\",\n            \"active\": true\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Public endpoints for master data dropdowns. No authentication required."
 		},
 		{
 			"name": "Orders",
@@ -448,7 +819,51 @@
 						},
 						"description": "Creates a new order. Order type (RENT/LEASE) is automatically derived from thresholds."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"deviceId\": \"device-id\",\n    \"requestedHours\": 5.0,\n    \"requestedAcres\": 2.0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/orders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"orders"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"order-123\",\n        \"orderType\": \"RENT\",\n        \"status\": \"INTEREST_RAISED\",\n        \"deviceId\": \"device-id\",\n        \"requestedBy\": \"user-id\",\n        \"requestedHours\": 5.0,\n        \"requestedAcres\": 2.0,\n        \"createdAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Get My Orders",
@@ -497,7 +912,37 @@
 						},
 						"description": "Gets all orders for the current authenticated user."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/orders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"orders"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"order-123\",\n            \"orderType\": \"RENT\",\n            \"status\": \"INTEREST_RAISED\",\n            \"deviceId\": \"device-id\",\n            \"requestedHours\": 5.0,\n            \"requestedAcres\": 2.0\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Get Order by ID",
@@ -547,7 +992,38 @@
 						},
 						"description": "Gets order details by ID."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/orders/order-123",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"orders",
+										"order-123"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"order-123\",\n        \"orderType\": \"RENT\",\n        \"status\": \"UNDER_REVIEW\",\n        \"deviceId\": \"device-id\",\n        \"requestedBy\": \"user-id\",\n        \"requestedHours\": 5.0,\n        \"requestedAcres\": 2.0,\n        \"note\": \"Need for tomorrow\",\n        \"handledBy\": {\n            \"type\": \"VLE\",\n            \"id\": \"vle-id\"\n        },\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T01:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Update Order Status",
@@ -612,10 +1088,572 @@
 						},
 						"description": "Updates order status. Only valid state transitions are allowed."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"toState\": \"UNDER_REVIEW\",\n    \"note\": \"Reviewing request\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/orders/order-123/status",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"orders",
+										"order-123",
+										"status"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"order-123\",\n        \"status\": \"UNDER_REVIEW\",\n        \"orderType\": \"RENT\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+						}
+					]
 				}
 			],
 			"description": "Order management endpoints for creating and managing orders."
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Update User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phoneNumber\": \"{{phone_number}}\",\n    \"name\": \"John Doe\",\n    \"defaultLocation\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    },\n    \"pincode\": \"560001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/update",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"update"
+							]
+						},
+						"description": "Updates user profile information. All fields are optional (partial updates). Phone number cannot be updated. Requires authentication."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"John Doe\",\n    \"pincode\": \"560001\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/user/update",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"update"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Resource updated\",\n    \"data\": {\n        \"id\": \"user-id\",\n        \"phoneNumber\": \"+919876543210\",\n        \"name\": \"John Doe\",\n        \"roles\": [\"FARMER\"],\n        \"activeRole\": \"FARMER\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/get-user/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"get-user",
+								"{{user_id}}"
+							]
+						},
+						"description": "Gets user details by ID. Requires authentication."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/user/get-user/user-id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"get-user",
+										"user-id"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"user-id\",\n        \"phoneNumber\": \"+919876543210\",\n        \"name\": \"John Doe\",\n        \"roles\": [\"FARMER\"],\n        \"activeRole\": \"FARMER\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				}
+			],
+			"description": "User profile management endpoints."
+		},
+		{
+			"name": "Leases",
+			"item": [
+				{
+					"name": "Get Lease by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/leases/{{lease_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"leases",
+								"{{lease_id}}"
+							]
+						},
+						"description": "Gets lease by ID. Requires authentication."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/leases/lease-id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"leases",
+										"lease-id"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"lease-id\",\n        \"deviceId\": \"device-id\",\n        \"vleId\": \"vle-id\",\n        \"status\": \"ACTIVE\",\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\",\n        \"estimatedPrice\": 50000.0\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get My Leases",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/leases/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"leases",
+								"me"
+							]
+						},
+						"description": "Gets current user's leases (for VLE role). Requires authentication."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/leases/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"leases",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"lease-id\",\n            \"deviceId\": \"device-id\",\n            \"status\": \"ACTIVE\",\n            \"startDate\": \"2025-01-01\",\n            \"endDate\": \"2025-12-31\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Lease management endpoints for VLEs."
+		},
+		{
+			"name": "VLE Profiles",
+			"item": [
+				{
+					"name": "Get VLE Profile by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/vles/{{vle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vles",
+								"{{vle_id}}"
+							]
+						},
+						"description": "Gets VLE profile by ID. Requires authentication."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/vles/vle-id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"vles",
+										"vle-id"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"vle-id\",\n        \"userId\": \"user-id\",\n        \"type\": \"INDIVIDUAL\",\n        \"name\": \"VLE Business Name\",\n        \"pincode\": \"560001\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get My VLE Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/vles/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vles",
+								"me"
+							]
+						},
+						"description": "Gets current user's VLE profile. Requires authentication and VLE role."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/vles/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"vles",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"vle-id\",\n        \"userId\": \"user-id\",\n        \"type\": \"INDIVIDUAL\",\n        \"name\": \"VLE Business Name\",\n        \"pincode\": \"560001\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				}
+			],
+			"description": "VLE profile endpoints for non-admin users."
+		},
+		{
+			"name": "Push Token",
+			"item": [
+				{
+					"name": "Register Push Token",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"platform\": \"ANDROID\",\n    \"token\": \"fcm-token-here\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/devices/push-token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"devices",
+								"push-token"
+							]
+						},
+						"description": "Registers push notification token for current user. Requires authentication."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"platform\": \"ANDROID\",\n    \"token\": \"fcm-token-here\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/devices/push-token",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"devices",
+										"push-token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": \"Push token registered successfully\",\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Push notification token registration endpoints."
 		},
 		{
 			"name": "Admin",
@@ -624,7 +1662,7 @@
 					"name": "Devices",
 					"item": [
 						{
-							"name": "Create Device",
+							"name": "Device Onboarding - Step 1: Basic Details",
 							"event": [
 								{
 									"listen": "test",
@@ -638,8 +1676,9 @@
 											"    const jsonData = pm.response.json();",
 											"    pm.expect(jsonData).to.have.property('data');",
 											"    pm.expect(jsonData.data).to.have.property('id');",
+											"    pm.expect(jsonData.data.status).to.equal('DRAFT');",
 											"    ",
-											"    // Save device ID",
+											"    // Save device ID for subsequent steps",
 											"    pm.environment.set('device_id', jsonData.data.id);",
 											"});"
 										],
@@ -667,7 +1706,592 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"sensorId\": \"SENSOR-001\",\n    \"name\": \"Tractor 1\",\n    \"deviceTypeId\": \"{{device_type_id}}\",\n    \"manufacturerId\": \"{{manufacturer_id}}\",\n    \"model\": \"Mahindra 575\",\n    \"companyOwned\": true,\n    \"requiresOperator\": true,\n    \"status\": \"WORKING\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    },\n    \"pincode\": \"560001\"\n}",
+									"raw": "{\n    \"sensorId\": \"SENSOR-001\",\n    \"name\": \"Heavy Duty Tractor\",\n    \"description\": \"Mahindra 575 tractor in excellent condition\",\n    \"deviceTypeId\": \"{{device_type_code}}\",\n    \"manufacturerId\": \"{{manufacturer_code}}\",\n    \"owner\": \"John Doe\",\n    \"manufacturedDate\": \"01/2020\",\n    \"address\": {\n        \"firstLine\": \"123 Main Street\",\n        \"secondLine\": \"Near City Park\",\n        \"pinCode\": \"560001\",\n        \"city\": \"Bangalore\",\n        \"state\": \"Karnataka\",\n        \"country\": \"India\"\n    },\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    },\n    \"companyOwned\": true,\n    \"requiresOperator\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/onboard/step1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"onboard",
+										"step1"
+									]
+								},
+								"description": "Step 1 of device onboarding: Creates device with basic details. Device starts with DRAFT status. Requires ADMIN role. Use device_type_code and manufacturer_code (not IDs)."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"sensorId\": \"SENSOR-001\",\n    \"name\": \"Heavy Duty Tractor\",\n    \"deviceTypeId\": \"TRACTOR\",\n    \"manufacturerId\": \"MAHINDRA\",\n    \"address\": {\n        \"pinCode\": \"560001\"\n    },\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/onboard/step1",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"onboard",
+												"step1"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439031\",\n        \"sensorId\": \"SENSOR-001\",\n        \"name\": \"Heavy Duty Tractor\",\n        \"description\": \"Mahindra 575 tractor in excellent condition\",\n        \"deviceTypeId\": \"TRACTOR\",\n        \"manufacturerId\": \"MAHINDRA\",\n        \"owner\": \"John Doe\",\n        \"manufacturedDate\": \"01/2020\",\n        \"address\": {\n            \"firstLine\": \"123 Main Street\",\n            \"pinCode\": \"560001\",\n            \"city\": \"Bangalore\",\n            \"state\": \"Karnataka\",\n            \"country\": \"India\"\n        },\n        \"pincode\": \"560001\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [77.5946, 12.9716]\n        },\n        \"companyOwned\": true,\n        \"requiresOperator\": true,\n        \"status\": \"DRAFT\",\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Device Onboarding - Step 2: Upload Media",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": [],
+											"description": "Image or video files (JPG, PNG, MP4, MOV). Max 20MB per file."
+										},
+										{
+											"key": "primaryIndex",
+											"value": "0",
+											"type": "text",
+											"description": "Optional: Index of file to mark as primary (0-based)"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/{{device_id}}/media",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"{{device_id}}",
+										"media"
+									]
+								},
+								"description": "Step 2 of device onboarding: Upload media files (images/videos) to S3. Can be called multiple times. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "files",
+													"type": "file",
+													"src": []
+												}
+											]
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/media",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"media"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439031\",\n        \"mediaUrls\": [\n            \"https://s3.amazonaws.com/kissanmitra-media/device-id/image1.jpg\",\n            \"https://s3.amazonaws.com/kissanmitra-media/device-id/video1.mp4\"\n        ],\n        \"primaryMediaUrl\": \"https://s3.amazonaws.com/kissanmitra-media/device-id/image1.jpg\",\n        \"status\": \"DRAFT\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Device Onboarding - Step 3: Get Pricing Status",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/{{device_id}}/pricing-status",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"{{device_id}}",
+										"pricing-status"
+									]
+								},
+								"description": "Step 3 of device onboarding: Check if pricing rules exist for device. Returns default rule and time-specific rules. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success - No Pricing Rule",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/pricing-status",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"pricing-status"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"defaultRule\": null,\n        \"timeSpecificRules\": [],\n        \"requiresPricingRule\": true\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								},
+								{
+									"name": "Success - Has Pricing Rules",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/pricing-status",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"pricing-status"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"defaultRule\": {\n            \"id\": \"rule-1\",\n            \"deviceTypeId\": \"TRACTOR\",\n            \"pincode\": \"560001\",\n            \"rules\": [\n                {\n                    \"metric\": \"PER_HOUR\",\n                    \"rate\": 500.0\n                },\n                {\n                    \"metric\": \"PER_ACRE\",\n                    \"rate\": 2000.0\n                }\n            ],\n            \"effectiveFrom\": \"2025-01-01\",\n            \"effectiveTo\": null,\n            \"status\": \"ACTIVE\"\n        },\n        \"timeSpecificRules\": [\n            {\n                \"id\": \"rule-2\",\n                \"deviceTypeId\": \"TRACTOR\",\n                \"pincode\": \"560001\",\n                \"rules\": [\n                    {\n                        \"metric\": \"PER_HOUR\",\n                        \"rate\": 750.0\n                    }\n                ],\n                \"effectiveFrom\": \"2025-06-01\",\n                \"effectiveTo\": \"2025-08-31\",\n                \"status\": \"ACTIVE\"\n            }\n        ],\n        \"requiresPricingRule\": false\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Device Onboarding - Step 3: Create Pricing Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"defaultRules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 500.0\n        },\n        {\n            \"metric\": \"PER_ACRE\",\n            \"rate\": 2000.0\n        }\n    ],\n    \"timeSpecificRules\": [\n        {\n            \"effectiveFrom\": \"2025-06-01\",\n            \"effectiveTo\": \"2025-08-31\",\n            \"rules\": [\n                {\n                    \"metric\": \"PER_HOUR\",\n                    \"rate\": 750.0\n                }\n            ]\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/{{device_id}}/pricing-rule",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"{{device_id}}",
+										"pricing-rule"
+									]
+								},
+								"description": "Step 3 of device onboarding: Create pricing rules for device. Default rule is mandatory. Time-specific rules are optional. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"defaultRules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 500.0\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/pricing-rule",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"pricing-rule"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"rule-1\",\n            \"deviceTypeId\": \"TRACTOR\",\n            \"pincode\": \"560001\",\n            \"rules\": [\n                {\n                    \"metric\": \"PER_HOUR\",\n                    \"rate\": 500.0\n                },\n                {\n                    \"metric\": \"PER_ACRE\",\n                    \"rate\": 2000.0\n                }\n            ],\n            \"effectiveFrom\": \"2025-01-01\",\n            \"effectiveTo\": null,\n            \"status\": \"ACTIVE\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Device Onboarding - Step 4: Get Summary",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/{{device_id}}/onboard-summary",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"{{device_id}}",
+										"onboard-summary"
+									]
+								},
+								"description": "Step 4 of device onboarding: Get complete summary of all entered information. Coordinates are NOT exposed. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/onboard-summary",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"onboard-summary"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"deviceId\": \"507f1f77bcf86cd799439031\",\n        \"basicDetails\": {\n            \"name\": \"Heavy Duty Tractor\",\n            \"description\": \"Mahindra 575 tractor\",\n            \"deviceTypeId\": \"TRACTOR\",\n            \"manufacturerId\": \"MAHINDRA\",\n            \"owner\": \"John Doe\",\n            \"manufacturedDate\": \"01/2020\",\n            \"companyOwned\": true,\n            \"requiresOperator\": true\n        },\n        \"media\": {\n            \"count\": 3,\n            \"primaryUrl\": \"https://s3.../image1.jpg\",\n            \"urls\": [\"https://s3.../image1.jpg\", \"https://s3.../image2.jpg\", \"https://s3.../video1.mp4\"]\n        },\n        \"location\": {\n            \"address\": {\n                \"firstLine\": \"123 Main Street\",\n                \"pinCode\": \"560001\",\n                \"city\": \"Bangalore\",\n                \"state\": \"Karnataka\"\n            },\n            \"pincode\": \"560001\"\n        },\n        \"pricing\": {\n            \"defaultRule\": {\n                \"id\": \"rule-1\",\n                \"rules\": [{\"metric\": \"PER_HOUR\", \"rate\": 500.0}]\n            },\n            \"timeSpecificRules\": []\n        },\n        \"status\": \"DRAFT\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Device Onboarding - Step 4: Finalize",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"action\": \"TAKE_LIVE\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/{{device_id}}/finalize",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"{{device_id}}",
+										"finalize"
+									]
+								},
+								"description": "Step 4 of device onboarding: Finalize device. ONBOARD = hidden (ONBOARDED status), TAKE_LIVE = visible (LIVE status, requires pricing rule). Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success - TAKE_LIVE",
+									"originalRequest": {
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"action\": \"TAKE_LIVE\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/finalize",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"finalize"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439031\",\n        \"status\": \"LIVE\",\n        \"name\": \"Heavy Duty Tractor\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								},
+								{
+									"name": "Error - No Pricing Rule",
+									"originalRequest": {
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"action\": \"TAKE_LIVE\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/finalize",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"finalize"
+											]
+										}
+									},
+									"status": "Internal Server Error",
+									"code": 500,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": false,\n    \"message\": \"Default pricing rule required before taking device live\",\n    \"errorCode\": \"500\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Create Device (Legacy)",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sensorId\": \"SENSOR-001\",\n    \"name\": \"Tractor 1\",\n    \"deviceTypeId\": \"{{device_type_code}}\",\n    \"manufacturerId\": \"{{manufacturer_code}}\",\n    \"companyOwned\": true,\n    \"requiresOperator\": true,\n    \"status\": \"DRAFT\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    },\n    \"pincode\": \"560001\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -686,7 +2310,7 @@
 										"devices"
 									]
 								},
-								"description": "Creates a new device. Requires ADMIN role."
+								"description": "Legacy endpoint: Creates a device directly. Prefer using 4-step onboarding flow. Requires ADMIN role. Use device_type_code and manufacturer_code (not IDs)."
 							},
 							"response": []
 						},
@@ -719,7 +2343,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/admin/devices",
+									"raw": "{{base_url}}/api/v1/admin/devices?status=LIVE&page=0&size=20",
 									"host": [
 										"{{base_url}}"
 									],
@@ -728,11 +2352,71 @@
 										"v1",
 										"admin",
 										"devices"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "LIVE",
+											"description": "Optional: Filter by status (DRAFT, ONBOARDED, LIVE, NOT_LIVE, UNDER_MAINTENANCE, RETIRED)"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"description": "Optional: Search by name or device type",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": "0",
+											"description": "Page number (0-based)"
+										},
+										{
+											"key": "size",
+											"value": "20",
+											"description": "Page size (default 20)"
+										}
 									]
 								},
-								"description": "Gets all devices. Requires ADMIN role."
+								"description": "Gets all devices with optional filters (status, search, pagination). Requires ADMIN role."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices?status=LIVE",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices"
+											],
+											"query": [
+												{
+													"key": "status",
+													"value": "LIVE"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"507f1f77bcf86cd799439031\",\n            \"sensorId\": \"SENSOR-001\",\n            \"name\": \"Heavy Duty Tractor\",\n            \"deviceTypeId\": \"TRACTOR\",\n            \"manufacturerId\": \"MAHINDRA\",\n            \"status\": \"LIVE\",\n            \"primaryMediaUrl\": \"https://s3.../image1.jpg\",\n            \"pincode\": \"560001\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Get Device by ID",
@@ -764,7 +2448,39 @@
 								},
 								"description": "Gets device by ID. Requires ADMIN role."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439031\",\n        \"sensorId\": \"SENSOR-001\",\n        \"name\": \"Heavy Duty Tractor\",\n        \"description\": \"Mahindra 575 tractor\",\n        \"deviceTypeId\": \"TRACTOR\",\n        \"manufacturerId\": \"MAHINDRA\",\n        \"owner\": \"John Doe\",\n        \"status\": \"LIVE\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [77.5946, 12.9716]\n        },\n        \"pincode\": \"560001\",\n        \"mediaUrls\": [\"https://s3.../image1.jpg\"],\n        \"primaryMediaUrl\": \"https://s3.../image1.jpg\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Update Device",
@@ -788,7 +2504,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"sensorId\": \"SENSOR-001\",\n    \"name\": \"Tractor 1 Updated\",\n    \"deviceTypeId\": \"{{device_type_id}}\",\n    \"manufacturerId\": \"{{manufacturer_id}}\",\n    \"model\": \"Mahindra 575\",\n    \"companyOwned\": true,\n    \"requiresOperator\": true,\n    \"status\": \"WORKING\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    },\n    \"pincode\": \"560001\"\n}",
+									"raw": "{\n    \"name\": \"Tractor 1 Updated\",\n    \"description\": \"Updated description\",\n    \"deviceTypeId\": \"{{device_type_code}}\",\n    \"manufacturerId\": \"{{manufacturer_code}}\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -808,9 +2524,134 @@
 										"{{device_id}}"
 									]
 								},
-								"description": "Updates device. Requires ADMIN role."
+								"description": "Updates device (supports partial updates). Use device_type_code and manufacturer_code. Requires ADMIN role."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"name\": \"Tractor 1 Updated\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439031\",\n        \"name\": \"Tractor 1 Updated\",\n        \"status\": \"LIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Device Status",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/devices/{{device_id}}/status?status=NOT_LIVE",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"devices",
+										"{{device_id}}",
+										"status"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "NOT_LIVE",
+											"description": "New status (DRAFT, ONBOARDED, LIVE, NOT_LIVE, UNDER_MAINTENANCE, RETIRED)"
+										}
+									]
+								},
+								"description": "Updates device status. LIVE status requires active pricing rule. RETIRED status cannot be changed. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "PATCH",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/devices/device-id/status?status=NOT_LIVE",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"devices",
+												"device-id",
+												"status"
+											],
+											"query": [
+												{
+													"key": "status",
+													"value": "NOT_LIVE"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439031\",\n        \"status\": \"NOT_LIVE\",\n        \"name\": \"Heavy Duty Tractor\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "Device management endpoints."
@@ -883,7 +2724,52 @@
 								},
 								"description": "Creates a VLE profile. Requires ADMIN role."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"userId\": \"user-id\",\n    \"type\": \"INDIVIDUAL\",\n    \"name\": \"VLE Business Name\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [77.5946, 12.9716]\n    },\n    \"pincode\": \"560001\",\n    \"status\": \"ACTIVE\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/vles",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"vles"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"vle-id\",\n        \"userId\": \"user-id\",\n        \"type\": \"INDIVIDUAL\",\n        \"name\": \"VLE Business Name\",\n        \"pincode\": \"560001\",\n        \"status\": \"ACTIVE\",\n        \"createdAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Get All VLEs",
@@ -914,7 +2800,38 @@
 								},
 								"description": "Gets all VLE profiles. Requires ADMIN role."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/vles",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"vles"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"vle-id\",\n            \"userId\": \"user-id\",\n            \"type\": \"INDIVIDUAL\",\n            \"name\": \"VLE Business Name\",\n            \"pincode\": \"560001\",\n            \"status\": \"ACTIVE\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Get VLE by ID",
@@ -946,10 +2863,1552 @@
 								},
 								"description": "Gets VLE profile by ID. Requires ADMIN role."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/vles/vle-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"vles",
+												"vle-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"vle-id\",\n        \"userId\": \"user-id\",\n        \"type\": \"INDIVIDUAL\",\n        \"name\": \"VLE Business Name\",\n        \"pincode\": \"560001\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "VLE profile management endpoints."
+				},
+				{
+					"name": "Leases",
+					"item": [
+						{
+							"name": "Create Lease from Order",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/leases?orderId={{order_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"leases"
+									],
+									"query": [
+										{
+											"key": "orderId",
+											"value": "{{order_id}}",
+											"description": "Approved LEASE order ID"
+										}
+									]
+								},
+								"description": "Creates a lease from an approved LEASE order. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/leases?orderId=order-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"leases"
+											],
+											"query": [
+												{
+													"key": "orderId",
+													"value": "order-id"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"lease-id\",\n        \"orderId\": \"order-id\",\n        \"deviceId\": \"device-id\",\n        \"vleId\": \"vle-id\",\n        \"status\": \"ACTIVE\",\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Lease by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/leases/{{lease_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"leases",
+										"{{lease_id}}"
+									]
+								},
+								"description": "Gets lease by ID. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/leases/lease-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"leases",
+												"lease-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"lease-id\",\n        \"deviceId\": \"device-id\",\n        \"vleId\": \"vle-id\",\n        \"status\": \"ACTIVE\",\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get All Leases",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/leases?vleId={{vle_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"leases"
+									],
+									"query": [
+										{
+											"key": "vleId",
+											"value": "{{vle_id}}",
+											"description": "Optional: Filter by VLE ID"
+										}
+									]
+								},
+								"description": "Gets all leases, optionally filtered by VLE ID. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/leases",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"leases"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"lease-id\",\n            \"deviceId\": \"device-id\",\n            \"vleId\": \"vle-id\",\n            \"status\": \"ACTIVE\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Assign Operator to Lease",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"operatorId\": \"{{operator_id}}\",\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-12-31\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/leases/{{lease_id}}/operators",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"leases",
+										"{{lease_id}}",
+										"operators"
+									]
+								},
+								"description": "Assigns an operator to a lease. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"operatorId\": \"operator-id\",\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-12-31\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/leases/lease-id/operators",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"leases",
+												"lease-id",
+												"operators"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"lease-id\",\n        \"operatorId\": \"operator-id\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						}
+					],
+					"description": "Admin lease management endpoints."
+				},
+				{
+					"name": "Operators",
+					"item": [
+						{
+							"name": "Create Operator",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Operator Name\",\n    \"phoneNumber\": \"+919876543210\",\n    \"licenseNumber\": \"LIC-12345\",\n    \"active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/operators",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"operators"
+									]
+								},
+								"description": "Creates a new operator. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"name\": \"Operator Name\",\n    \"phoneNumber\": \"+919876543210\",\n    \"licenseNumber\": \"LIC-12345\",\n    \"active\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/operators",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"operators"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"operator-id\",\n        \"name\": \"Operator Name\",\n        \"phoneNumber\": \"+919876543210\",\n        \"licenseNumber\": \"LIC-12345\",\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get All Operators",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/operators",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"operators"
+									]
+								},
+								"description": "Gets all active operators. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/operators",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"operators"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"operator-id\",\n            \"name\": \"Operator Name\",\n            \"phoneNumber\": \"+919876543210\",\n            \"licenseNumber\": \"LIC-12345\",\n            \"active\": true\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Operator by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/operators/{{operator_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"operators",
+										"{{operator_id}}"
+									]
+								},
+								"description": "Gets operator by ID. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/operators/operator-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"operators",
+												"operator-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"operator-id\",\n        \"name\": \"Operator Name\",\n        \"phoneNumber\": \"+919876543210\",\n        \"licenseNumber\": \"LIC-12345\",\n        \"active\": true\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Operator",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Updated Operator Name\",\n    \"phoneNumber\": \"+919876543210\",\n    \"licenseNumber\": \"LIC-12345\",\n    \"active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/operators/{{operator_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"operators",
+										"{{operator_id}}"
+									]
+								},
+								"description": "Updates operator. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"name\": \"Updated Operator Name\",\n    \"active\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/operators/operator-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"operators",
+												"operator-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"operator-id\",\n        \"name\": \"Updated Operator Name\",\n        \"active\": true\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						}
+					],
+					"description": "Operator management endpoints."
+				},
+				{
+					"name": "Device Types",
+					"item": [
+						{
+							"name": "Create Device Type",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response has device type data\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('data');",
+											"    pm.expect(jsonData.data).to.have.property('code');",
+											"    ",
+											"    // Save device type code",
+											"    pm.environment.set('device_type_code', jsonData.data.code);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\": \"TRACTOR\",\n    \"displayName\": \"Heavy Duty Tractor\",\n    \"requiresOperator\": true,\n    \"active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/device-types",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"device-types"
+									]
+								},
+								"description": "Creates a new device type. Code must be unique and uppercase. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"code\": \"TRACTOR\",\n    \"displayName\": \"Heavy Duty Tractor\",\n    \"requiresOperator\": true,\n    \"active\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/device-types",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"device-types"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439011\",\n        \"code\": \"TRACTOR\",\n        \"displayName\": \"Heavy Duty Tractor\",\n        \"requiresOperator\": true,\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get All Device Types",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/device-types?active=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"device-types"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true",
+											"description": "Optional: filter by active status (true/false)"
+										}
+									]
+								},
+								"description": "Gets all device types. Optional query parameter 'active' to filter by status. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/device-types?active=true",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"device-types"
+											],
+											"query": [
+												{
+													"key": "active",
+													"value": "true"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"507f1f77bcf86cd799439011\",\n            \"code\": \"TRACTOR\",\n            \"displayName\": \"Heavy Duty Tractor\",\n            \"requiresOperator\": true,\n            \"active\": true,\n            \"createdAt\": \"2025-01-01T00:00:00Z\",\n            \"updatedAt\": \"2025-01-01T00:00:00Z\"\n        },\n        {\n            \"id\": \"507f1f77bcf86cd799439012\",\n            \"code\": \"HARVESTER\",\n            \"displayName\": \"Combine Harvester\",\n            \"requiresOperator\": true,\n            \"active\": true,\n            \"createdAt\": \"2025-01-01T00:00:00Z\",\n            \"updatedAt\": \"2025-01-01T00:00:00Z\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Device Type by Code",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/device-types/{{device_type_code}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"device-types",
+										"{{device_type_code}}"
+									]
+								},
+								"description": "Gets device type by code. Code is case-insensitive (automatically converted to uppercase). Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/device-types/TRACTOR",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"device-types",
+												"TRACTOR"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439011\",\n        \"code\": \"TRACTOR\",\n        \"displayName\": \"Heavy Duty Tractor\",\n        \"requiresOperator\": true,\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Device Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\": \"TRACTOR\",\n    \"displayName\": \"Updated Tractor Name\",\n    \"requiresOperator\": false,\n    \"active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/device-types/{{device_type_code}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"device-types",
+										"{{device_type_code}}"
+									]
+								},
+								"description": "Updates device type. Code is immutable (cannot be changed). Only displayName, requiresOperator, and active can be updated. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"code\": \"TRACTOR\",\n    \"displayName\": \"Updated Tractor Name\",\n    \"requiresOperator\": false,\n    \"active\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/device-types/TRACTOR",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"device-types",
+												"TRACTOR"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439011\",\n        \"code\": \"TRACTOR\",\n        \"displayName\": \"Updated Tractor Name\",\n        \"requiresOperator\": false,\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T01:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Device Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/device-types/{{device_type_code}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"device-types",
+										"{{device_type_code}}"
+									]
+								},
+								"description": "Soft deletes device type (sets active=false). Cannot delete if devices, pricing rules, or threshold configs reference it. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/device-types/TRACTOR",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"device-types",
+												"TRACTOR"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": \"Device type soft deleted successfully\",\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+								},
+								{
+									"name": "Error - Has References",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/device-types/TRACTOR",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"device-types",
+												"TRACTOR"
+											]
+										}
+									},
+									"status": "Internal Server Error",
+									"code": 500,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": false,\n    \"message\": \"Cannot delete device type: 5 device(s) reference this type\",\n    \"errorCode\": \"500\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+								}
+							]
+						}
+					],
+					"description": "Device type master data management endpoints. Code is immutable identifier."
+				},
+				{
+					"name": "Manufacturers",
+					"item": [
+						{
+							"name": "Create Manufacturer",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response has manufacturer data\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('data');",
+											"    pm.expect(jsonData.data).to.have.property('code');",
+											"    ",
+											"    // Save manufacturer code",
+											"    pm.environment.set('manufacturer_code', jsonData.data.code);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\": \"MAHINDRA\",\n    \"name\": \"Mahindra Tractors\",\n    \"active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/manufacturers",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"manufacturers"
+									]
+								},
+								"description": "Creates a new manufacturer. Code must be unique and uppercase. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"code\": \"MAHINDRA\",\n    \"name\": \"Mahindra Tractors\",\n    \"active\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/manufacturers",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"manufacturers"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439021\",\n        \"code\": \"MAHINDRA\",\n        \"name\": \"Mahindra Tractors\",\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get All Manufacturers",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/manufacturers?active=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"manufacturers"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true",
+											"description": "Optional: filter by active status (true/false)"
+										}
+									]
+								},
+								"description": "Gets all manufacturers. Optional query parameter 'active' to filter by status. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/manufacturers?active=true",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"manufacturers"
+											],
+											"query": [
+												{
+													"key": "active",
+													"value": "true"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": [\n        {\n            \"id\": \"507f1f77bcf86cd799439021\",\n            \"code\": \"MAHINDRA\",\n            \"name\": \"Mahindra Tractors\",\n            \"active\": true,\n            \"createdAt\": \"2025-01-01T00:00:00Z\",\n            \"updatedAt\": \"2025-01-01T00:00:00Z\"\n        },\n        {\n            \"id\": \"507f1f77bcf86cd799439022\",\n            \"code\": \"JOHN_DEERE\",\n            \"name\": \"John Deere India\",\n            \"active\": true,\n            \"createdAt\": \"2025-01-01T00:00:00Z\",\n            \"updatedAt\": \"2025-01-01T00:00:00Z\"\n        }\n    ],\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Manufacturer by Code",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/manufacturers/{{manufacturer_code}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"manufacturers",
+										"{{manufacturer_code}}"
+									]
+								},
+								"description": "Gets manufacturer by code. Code is case-insensitive (automatically converted to uppercase). Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/manufacturers/MAHINDRA",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"manufacturers",
+												"MAHINDRA"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439021\",\n        \"code\": \"MAHINDRA\",\n        \"name\": \"Mahindra Tractors\",\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T00:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Manufacturer",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\": \"MAHINDRA\",\n    \"name\": \"Mahindra & Mahindra\",\n    \"active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/manufacturers/{{manufacturer_code}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"manufacturers",
+										"{{manufacturer_code}}"
+									]
+								},
+								"description": "Updates manufacturer. Code is immutable (cannot be changed). Only name and active can be updated. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"code\": \"MAHINDRA\",\n    \"name\": \"Mahindra & Mahindra\",\n    \"active\": true\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/manufacturers/MAHINDRA",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"manufacturers",
+												"MAHINDRA"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"507f1f77bcf86cd799439021\",\n        \"code\": \"MAHINDRA\",\n        \"name\": \"Mahindra & Mahindra\",\n        \"active\": true,\n        \"createdAt\": \"2025-01-01T00:00:00Z\",\n        \"updatedAt\": \"2025-01-01T01:00:00Z\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Manufacturer",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/manufacturers/{{manufacturer_code}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"manufacturers",
+										"{{manufacturer_code}}"
+									]
+								},
+								"description": "Soft deletes manufacturer (sets active=false). Cannot delete if devices reference it. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/manufacturers/MAHINDRA",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"manufacturers",
+												"MAHINDRA"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": \"Manufacturer soft deleted successfully\",\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+								},
+								{
+									"name": "Error - Has References",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/manufacturers/MAHINDRA",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"manufacturers",
+												"MAHINDRA"
+											]
+										}
+									},
+									"status": "Internal Server Error",
+									"code": 500,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": false,\n    \"message\": \"Cannot delete manufacturer: 3 device(s) reference this manufacturer\",\n    \"errorCode\": \"500\",\n    \"timestamp\": \"2025-01-01T01:00:00Z\"\n}"
+								}
+							]
+						}
+					],
+					"description": "Manufacturer master data management endpoints. Code is immutable identifier."
 				},
 				{
 					"name": "Pricing",
@@ -989,7 +4448,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"deviceTypeId\": \"{{device_type_id}}\",\n    \"pincode\": \"560001\",\n    \"rules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 500.0\n        },\n        {\n            \"metric\": \"PER_ACRE\",\n            \"rate\": 2000.0\n        }\n    ],\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
+									"raw": "{\n    \"deviceTypeId\": \"{{device_type_code}}\",\n    \"pincode\": \"560001\",\n    \"rules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 500.0\n        },\n        {\n            \"metric\": \"PER_ACRE\",\n            \"rate\": 2000.0\n        }\n    ],\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1009,9 +4468,149 @@
 										"rules"
 									]
 								},
-								"description": "Creates a pricing rule. Requires ADMIN role."
+								"description": "Creates a pricing rule. Requires ADMIN role. Use device_type_code (not ID)."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"deviceTypeId\": \"TRACTOR\",\n    \"pincode\": \"560001\",\n    \"rules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 500.0\n        }\n    ],\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/pricing/rules",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"pricing",
+												"rules"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"rule-id\",\n        \"deviceTypeId\": \"TRACTOR\",\n        \"pincode\": \"560001\",\n        \"rules\": [\n            {\n                \"metric\": \"PER_HOUR\",\n                \"rate\": 500.0\n            }\n        ],\n        \"effectiveFrom\": \"2025-01-01\",\n        \"effectiveTo\": \"2025-12-31\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Pricing Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{admin_jwt_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"deviceTypeId\": \"TRACTOR\",\n    \"pincode\": \"560001\",\n    \"rules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 600.0\n        }\n    ],\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/admin/pricing/rules/{{pricing_rule_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"pricing",
+										"rules",
+										"{{pricing_rule_id}}"
+									]
+								},
+								"description": "Updates pricing rule. Requires ADMIN role."
+							},
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"deviceTypeId\": \"TRACTOR\",\n    \"pincode\": \"560001\",\n    \"rules\": [\n        {\n            \"metric\": \"PER_HOUR\",\n            \"rate\": 600.0\n        }\n    ],\n    \"status\": \"ACTIVE\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/pricing/rules/rule-id",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"pricing",
+												"rules",
+												"rule-id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"rule-id\",\n        \"deviceTypeId\": \"TRACTOR\",\n        \"rules\": [\n            {\n                \"metric\": \"PER_HOUR\",\n                \"rate\": 600.0\n            }\n        ],\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Create Pricing Threshold",
@@ -1048,7 +4647,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"deviceTypeId\": \"{{device_type_id}}\",\n    \"maxRentalHours\": 24,\n    \"maxRentalAcres\": 10,\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
+									"raw": "{\n    \"deviceTypeId\": \"{{device_type_code}}\",\n    \"maxRentalHours\": 24,\n    \"maxRentalAcres\": 10,\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1068,9 +4667,55 @@
 										"thresholds"
 									]
 								},
-								"description": "Creates or updates pricing threshold. Requires ADMIN role."
+								"description": "Creates or updates pricing threshold. Requires ADMIN role. Use device_type_code (not ID)."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"deviceTypeId\": \"TRACTOR\",\n    \"maxRentalHours\": 24,\n    \"maxRentalAcres\": 10,\n    \"effectiveFrom\": \"2025-01-01\",\n    \"effectiveTo\": \"2025-12-31\",\n    \"status\": \"ACTIVE\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/pricing/thresholds",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"pricing",
+												"thresholds"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"threshold-id\",\n        \"deviceTypeId\": \"TRACTOR\",\n        \"maxRentalHours\": 24,\n        \"maxRentalAcres\": 10,\n        \"effectiveFrom\": \"2025-01-01\",\n        \"effectiveTo\": \"2025-12-31\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Get Threshold by Device Type",
@@ -1088,7 +4733,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/admin/pricing/thresholds/{{device_type_id}}",
+									"raw": "{{base_url}}/api/v1/admin/pricing/thresholds/{{device_type_code}}",
 									"host": [
 										"{{base_url}}"
 									],
@@ -1098,12 +4743,45 @@
 										"admin",
 										"pricing",
 										"thresholds",
-										"{{device_type_id}}"
+										"{{device_type_code}}"
 									]
 								},
-								"description": "Gets threshold config for device type. Requires ADMIN role."
+								"description": "Gets threshold config for device type. Requires ADMIN role. Use device_type_code (not ID)."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Success Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/admin/pricing/thresholds/TRACTOR",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"pricing",
+												"thresholds",
+												"TRACTOR"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Operation successful\",\n    \"data\": {\n        \"id\": \"threshold-id\",\n        \"deviceTypeId\": \"TRACTOR\",\n        \"maxRentalHours\": 24,\n        \"maxRentalAcres\": 10,\n        \"effectiveFrom\": \"2025-01-01\",\n        \"effectiveTo\": \"2025-12-31\",\n        \"status\": \"ACTIVE\"\n    },\n    \"correlationId\": \"req-123456\",\n    \"timestamp\": \"2025-01-01T00:00:00Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "Pricing and threshold management endpoints."
