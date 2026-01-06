@@ -35,6 +35,8 @@ A Spring Boot application for KissanMitra platform.
    mvn spring-boot:run -Dspring-boot.run.profiles=local
    ```
 
+   The application will be available at http://localhost:8080/
+
 ## Troubleshooting
 
 ### Java Version Issues
