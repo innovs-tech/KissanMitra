@@ -7,6 +7,7 @@ import com.kissanmitra.repository.ManufacturerRepository;
 import com.kissanmitra.request.CreateManufacturerRequest;
 import com.kissanmitra.request.UpdateManufacturerRequest;
 import com.kissanmitra.response.BaseClientResponse;
+import com.kissanmitra.service.MasterDataService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ public class ManufacturerController {
 
     private final ManufacturerRepository manufacturerRepository;
     private final DeviceRepository deviceRepository;
+    private final MasterDataService masterDataService;
 
     /**
      * Creates a new manufacturer.
@@ -70,6 +72,8 @@ public class ManufacturerController {
                 .build();
 
         final Manufacturer created = manufacturerRepository.save(manufacturer);
+        // BUSINESS DECISION: Evict cache after creation to ensure subsequent lookups get fresh data
+        masterDataService.evictManufacturerCache(created.getCode());
         log.info("Created manufacturer: {} ({})", created.getCode(), created.getName());
         return Response.SUCCESS.buildSuccess(generateRequestId(), created);
     }
@@ -135,6 +139,8 @@ public class ManufacturerController {
         updated.setId(existing.getId());
 
         final Manufacturer saved = manufacturerRepository.save(updated);
+        // BUSINESS DECISION: Evict cache after update to ensure subsequent lookups get fresh data
+        masterDataService.evictManufacturerCache(saved.getCode());
         log.info("Updated manufacturer: {} ({})", saved.getCode(), saved.getName());
         return Response.SUCCESS.buildSuccess(generateRequestId(), saved);
     }
@@ -168,6 +174,8 @@ public class ManufacturerController {
                 .build();
         updated.setId(manufacturer.getId());
         manufacturerRepository.save(updated);
+        // BUSINESS DECISION: Evict cache after soft delete to ensure subsequent lookups get fresh data
+        masterDataService.evictManufacturerCache(manufacturer.getCode());
 
         log.info("Soft deleted manufacturer: {} ({})", manufacturer.getCode(), manufacturer.getName());
         return Response.SUCCESS.buildSuccess(generateRequestId(), "Manufacturer soft deleted successfully");

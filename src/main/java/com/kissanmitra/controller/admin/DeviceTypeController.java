@@ -9,10 +9,10 @@ import com.kissanmitra.repository.ThresholdConfigRepository;
 import com.kissanmitra.request.CreateDeviceTypeRequest;
 import com.kissanmitra.request.UpdateDeviceTypeRequest;
 import com.kissanmitra.response.BaseClientResponse;
+import com.kissanmitra.service.MasterDataService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.kissanmitra.util.CommonUtils.generateRequestId;
 
@@ -51,6 +50,7 @@ public class DeviceTypeController {
     private final DeviceRepository deviceRepository;
     private final PricingRuleRepository pricingRuleRepository;
     private final ThresholdConfigRepository thresholdConfigRepository;
+    private final MasterDataService masterDataService;
 
     /**
      * Creates a new device type.
@@ -77,6 +77,8 @@ public class DeviceTypeController {
                 .build();
 
         final DeviceType created = deviceTypeRepository.save(deviceType);
+        // BUSINESS DECISION: Evict cache after creation to ensure subsequent lookups get fresh data
+        masterDataService.evictDeviceTypeCache(created.getCode());
         log.info("Created device type: {} ({})", created.getCode(), created.getDisplayName());
         return Response.SUCCESS.buildSuccess(generateRequestId(), created);
     }
@@ -143,6 +145,8 @@ public class DeviceTypeController {
         updated.setId(existing.getId());
 
         final DeviceType saved = deviceTypeRepository.save(updated);
+        // BUSINESS DECISION: Evict cache after update to ensure subsequent lookups get fresh data
+        masterDataService.evictDeviceTypeCache(saved.getCode());
         log.info("Updated device type: {} ({})", saved.getCode(), saved.getDisplayName());
         return Response.SUCCESS.buildSuccess(generateRequestId(), saved);
     }
@@ -190,6 +194,8 @@ public class DeviceTypeController {
                 .build();
         updated.setId(deviceType.getId());
         deviceTypeRepository.save(updated);
+        // BUSINESS DECISION: Evict cache after soft delete to ensure subsequent lookups get fresh data
+        masterDataService.evictDeviceTypeCache(deviceType.getCode());
 
         log.info("Soft deleted device type: {} ({})", deviceType.getCode(), deviceType.getDisplayName());
         return Response.SUCCESS.buildSuccess(generateRequestId(), "Device type soft deleted successfully");

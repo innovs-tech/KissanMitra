@@ -2,6 +2,7 @@ package com.kissanmitra.repository;
 
 import com.kissanmitra.entity.PricingRule;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -52,6 +53,7 @@ public interface PricingRuleRepository extends MongoRepository<PricingRule, Stri
      * @param status status
      * @return list of active time-specific rules
      */
+    @Query("{ 'deviceTypeId': ?0, 'pincode': ?1, 'status': ?2, 'effectiveFrom': { $lte: ?3 }, 'effectiveTo': { $ne: null, $gte: ?3 } }")
     List<PricingRule> findByDeviceTypeIdAndPincodeAndStatusAndEffectiveFromLessThanEqualAndEffectiveToIsNotNullAndEffectiveToGreaterThanEqual(
             String deviceTypeId, String pincode, String status, LocalDate date, LocalDate date2);
 
@@ -66,6 +68,7 @@ public interface PricingRuleRepository extends MongoRepository<PricingRule, Stri
      * @param status status
      * @return list of overlapping rules
      */
+    @Query("{ 'deviceTypeId': ?0, 'pincode': ?1, 'status': ?2, 'effectiveTo': { $ne: null, $gte: ?4 }, 'effectiveFrom': { $lte: ?3 } }")
     List<PricingRule> findByDeviceTypeIdAndPincodeAndStatusAndEffectiveToIsNotNullAndEffectiveFromLessThanEqualAndEffectiveToGreaterThanEqual(
             String deviceTypeId, String pincode, String status, LocalDate to, LocalDate from);
 

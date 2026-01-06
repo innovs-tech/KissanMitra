@@ -5,6 +5,7 @@ import com.kissanmitra.repository.DeviceRepository;
 import com.kissanmitra.repository.ManufacturerRepository;
 import com.kissanmitra.request.CreateManufacturerRequest;
 import com.kissanmitra.request.UpdateManufacturerRequest;
+import com.kissanmitra.service.MasterDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ class ManufacturerControllerTest {
 
     @Mock
     private DeviceRepository deviceRepository;
+
+    @Mock
+    private MasterDataService masterDataService;
 
     @InjectMocks
     private ManufacturerController manufacturerController;

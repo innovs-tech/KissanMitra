@@ -48,5 +48,21 @@ public interface MasterDataService {
      * @return map of code to Manufacturer
      */
     Map<String, Manufacturer> getManufacturersByCodes(List<String> codes);
+
+    /**
+     * Evicts device type from cache.
+     * Called by controllers after updates/deletes.
+     *
+     * @param code device type code
+     */
+    void evictDeviceTypeCache(String code);
+
+    /**
+     * Evicts manufacturer from cache.
+     * Called by controllers after updates/deletes.
+     *
+     * @param code manufacturer code
+     */
+    void evictManufacturerCache(String code);
 }
 

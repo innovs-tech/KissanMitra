@@ -7,6 +7,7 @@ import com.kissanmitra.repository.PricingRuleRepository;
 import com.kissanmitra.repository.ThresholdConfigRepository;
 import com.kissanmitra.request.CreateDeviceTypeRequest;
 import com.kissanmitra.request.UpdateDeviceTypeRequest;
+import com.kissanmitra.service.MasterDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +20,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -41,6 +41,9 @@ class DeviceTypeControllerTest {
 
     @Mock
     private ThresholdConfigRepository thresholdConfigRepository;
+
+    @Mock
+    private MasterDataService masterDataService;
 
     @InjectMocks
     private DeviceTypeController deviceTypeController;
