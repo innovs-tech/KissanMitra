@@ -12,79 +12,91 @@ http://localhost:8080/api/v1
 
 ## Authentication
 
-### Login
+### Send OTP
 
-**Endpoint:** `POST /auth/login`
+**Endpoint:** `POST /auth/send-otp`
 
-**Description:** Authenticate user and return JWT token.
+**Description:** Send OTP to the given phone number for authentication.
 
-**Request Body:**
+**Query Parameters:**
 
-```json
-{
-  "phone": "string",
-  "otp": "string"
-}
-```
+- `phoneNumber`: string (required) - Phone number to send OTP to
 
 **Response:**
 
 ```json
 {
-  "token": "string",
-  "user": {
-    "id": "string",
-    "phone": "string",
-    "role": "string"
-  }
-}
-```
-
-### Register
-
-**Endpoint:** `POST /auth/register`
-
-**Description:** Register a new user.
-
-**Request Body:**
-
-```json
-{
-  "phone": "string",
-  "name": "string"
-}
-```
-
-**Response:**
-
-```json
-{
-  "message": "OTP sent to phone"
+  "success": true,
+  "requestId": "string",
+  "data": "OTP sent successfully"
 }
 ```
 
 ### Verify OTP
 
-**Endpoint:** `POST /auth/verify`
+**Endpoint:** `POST /auth/verify-otp`
 
-**Description:** Verify OTP for registration/login.
+**Description:** Verify OTP and return JWT token with user authentication.
 
 **Request Body:**
 
 ```json
 {
-  "phone": "string",
+  "phoneNumber": "string",
   "otp": "string"
 }
 ```
 
-## User Management
+**Response:**
 
-### Get Profile
+```json
+{
+  "success": true,
+  "requestId": "string",
+  "data": {
+    "token": "string",
+    "user": {
+      "id": "string",
+      "phone": "string",
+      "name": "string",
+      "roles": ["string"],
+      "activeRole": "string"
+    }
+  }
+}
+```
 
-**Endpoint:** `GET /users/profile`
+### Select Active Role
 
-**Description:** Get current user profile.
+**Endpoint:** `POST /auth/session/role`
+
+**Description:** Select active role for the current session and get new JWT token.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+
+```json
+{
+  "activeRole": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "requestId": "string",
+  "data": "new-jwt-token-string"
+}
+```
+
+### Get Current User
+
+**Endpoint:** `GET /auth/me`
+
+**Description:** Get current authenticated user details.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -92,12 +104,19 @@ http://localhost:8080/api/v1
 
 ```json
 {
-  "id": "string",
-  "phone": "string",
-  "name": "string",
-  "role": "string"
+  "success": true,
+  "requestId": "string",
+  "data": {
+    "id": "string",
+    "phone": "string",
+    "name": "string",
+    "roles": ["string"],
+    "activeRole": "string"
+  }
 }
 ```
+
+## User Management
 
 ### Update Profile
 
