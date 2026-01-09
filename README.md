@@ -51,6 +51,15 @@ A Spring Boot application for KissanMitra platform.
 - Check for dependency issues: `mvn dependency:tree`
 - Ensure internet connection for downloading dependencies
 
+### Lombok and Java Compatibility Issues
+
+If you encounter compilation errors related to Lombok and Java versions (e.g., `ExceptionInInitializerError` with `TypeTag.UNKNOWN`):
+
+- Ensure Lombok version is 1.18.38 or later in `pom.xml`
+- Update Maven Compiler Plugin to 3.13.0 or later
+- Use `<release>17</release>` instead of separate `<source>` and `<target>`
+- For Java 25+ with Mockito tests, add `-Dnet.bytebuddy.experimental=true` to Surefire plugin configuration
+
 ### Database Connection
 
 - Verify MongoDB is running: `mongosh` or check service
