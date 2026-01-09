@@ -31,8 +31,15 @@ A Spring Boot application for KissanMitra platform.
    - For Redis, update Redis config if using
 
 4. Run the application:
+
    ```bash
    mvn spring-boot:run -Dspring-boot.run.profiles=local
+   ```
+
+   For debug mode (to attach debugger/breakpoints):
+
+   ```bash
+   mvn spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
    ```
 
    The application will be available at http://localhost:8080/
@@ -80,3 +87,10 @@ If you encounter compilation errors related to Lombok and Java versions (e.g., `
 
 - Check application logs in console or `logs/` directory
 - Enable debug logging by setting `logging.level.com.kissanmitra=DEBUG`
+
+### Debugging
+
+- Run in debug mode: `mvn spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"`
+- Attach debugger to port 5005 (default)
+- In VS Code, create launch configuration with port 5005
+- For IntelliJ IDEA, create Remote JVM Debug configuration
