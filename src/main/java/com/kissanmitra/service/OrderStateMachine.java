@@ -31,11 +31,14 @@ public final class OrderStateMachine {
 
             OrderStatus.INTEREST_RAISED, Set.of(
                     OrderStatus.UNDER_REVIEW,
-                    OrderStatus.ACCEPTED
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.REJECTED,
+                    OrderStatus.CANCELLED
             ),
 
             OrderStatus.UNDER_REVIEW, Set.of(
-                    OrderStatus.ACCEPTED
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.REJECTED
             ),
 
             OrderStatus.ACCEPTED, Set.of(
@@ -67,8 +70,8 @@ public final class OrderStateMachine {
             return false;
         }
 
-        // CLOSED is terminal state
-        if (from == OrderStatus.CLOSED) {
+        // Terminal states cannot transition
+        if (from == OrderStatus.CLOSED || from == OrderStatus.REJECTED || from == OrderStatus.CANCELLED) {
             return false;
         }
 

@@ -7,6 +7,8 @@ package com.kissanmitra.domain.enums;
  * <ul>
  *   <li>DRAFT → INTEREST_RAISED → UNDER_REVIEW → ACCEPTED → PICKUP_SCHEDULED → ACTIVE → COMPLETED → CLOSED</li>
  *   <li>Rental orders: DRAFT → INTEREST_RAISED → ACCEPTED → ACTIVE → COMPLETED → CLOSED</li>
+ *   <li>Rejection: INTEREST_RAISED → REJECTED, UNDER_REVIEW → REJECTED (by handler)</li>
+ *   <li>Cancellation: INTEREST_RAISED → CANCELLED (by requester)</li>
  * </ul>
  *
  * <p>State transitions are validated by {@link com.kissanmitra.service.OrderStateMachine}.
@@ -57,6 +59,18 @@ public enum OrderStatus {
      * Final terminal state.
      * Order becomes read-only, billing finalized.
      */
-    CLOSED
+    CLOSED,
+
+    /**
+     * Order rejected by handler (Admin for LEASE, VLE for RENT).
+     * Terminal state - cannot be reactivated.
+     */
+    REJECTED,
+
+    /**
+     * Order cancelled by requester.
+     * Terminal state - cannot be reactivated.
+     */
+    CANCELLED
 }
 

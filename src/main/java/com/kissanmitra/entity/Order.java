@@ -78,5 +78,29 @@ public class Order extends BaseEntity {
      * Optional note for the order.
      */
     private String note;
+
+    /**
+     * Requester's phone number.
+     * Retrieved from current user context.
+     */
+    private String phone;
+
+    /**
+     * Requester's name.
+     * Retrieved from user profile if available.
+     */
+    private String name;
+
+    /**
+     * Order start date.
+     * Provided by frontend.
+     */
+    private java.time.LocalDate startDate;
+
+    /**
+     * Order end date.
+     * Provided by frontend.
+     */
+    private java.time.LocalDate endDate;
 }
 

@@ -42,5 +42,19 @@ public class CreateOrderRequest {
      * Intent ID if order is created from discovery intent.
      */
     private String intentId;
+
+    /**
+     * Order start date.
+     * Required for order creation.
+     */
+    @NotNull(message = "Start date is required")
+    private java.time.LocalDate startDate;
+
+    /**
+     * Order end date.
+     * Required for order creation.
+     */
+    @NotNull(message = "End date is required")
+    private java.time.LocalDate endDate;
 }
 

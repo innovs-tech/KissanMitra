@@ -24,7 +24,11 @@ public class UserContext {
     /**
      * Gets the current authenticated user's ID.
      *
-     * @return user ID, or null if not authenticated
+     * <p>Business Decision:
+     * - Returns null if token is invalid or cannot be parsed
+     * - This allows public endpoints to work without authentication
+     *
+     * @return user ID, or null if not authenticated or token is invalid
      */
     public String getCurrentUserId() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -33,13 +37,25 @@ public class UserContext {
         }
 
         final String token = extractTokenFromAuthentication(authentication);
-        return token != null ? jwtUtil.extractUserId(token) : null;
+        if (token == null) {
+            return null;
+        }
+
+        try {
+            return jwtUtil.extractUserId(token);
+        } catch (Exception e) {
+            // Token is invalid or cannot be parsed - treat as unauthenticated
+            return null;
+        }
     }
 
     /**
      * Gets the current authenticated user's phone number.
      *
-     * @return phone number, or null if not authenticated
+     * <p>Business Decision:
+     * - Returns null if token is invalid or cannot be parsed
+     *
+     * @return phone number, or null if not authenticated or token is invalid
      */
     public String getCurrentUserPhone() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -48,13 +64,25 @@ public class UserContext {
         }
 
         final String token = extractTokenFromAuthentication(authentication);
-        return token != null ? jwtUtil.extractPhoneNumber(token) : null;
+        if (token == null) {
+            return null;
+        }
+
+        try {
+            return jwtUtil.extractPhoneNumber(token);
+        } catch (Exception e) {
+            // Token is invalid or cannot be parsed - treat as unauthenticated
+            return null;
+        }
     }
 
     /**
      * Gets the current authenticated user's roles.
      *
-     * @return list of user roles, or empty list if not authenticated
+     * <p>Business Decision:
+     * - Returns empty list if token is invalid or cannot be parsed
+     *
+     * @return list of user roles, or empty list if not authenticated or token is invalid
      */
     public List<UserRole> getCurrentUserRoles() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -63,13 +91,25 @@ public class UserContext {
         }
 
         final String token = extractTokenFromAuthentication(authentication);
-        return token != null ? jwtUtil.extractRoles(token) : List.of();
+        if (token == null) {
+            return List.of();
+        }
+
+        try {
+            return jwtUtil.extractRoles(token);
+        } catch (Exception e) {
+            // Token is invalid or cannot be parsed - treat as unauthenticated
+            return List.of();
+        }
     }
 
     /**
      * Gets the current authenticated user's active role.
      *
-     * @return active role, or null if not authenticated or not set
+     * <p>Business Decision:
+     * - Returns null if token is invalid or cannot be parsed
+     *
+     * @return active role, or null if not authenticated, not set, or token is invalid
      */
     public UserRole getCurrentUserActiveRole() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -78,7 +118,16 @@ public class UserContext {
         }
 
         final String token = extractTokenFromAuthentication(authentication);
-        return token != null ? jwtUtil.extractActiveRole(token) : null;
+        if (token == null) {
+            return null;
+        }
+
+        try {
+            return jwtUtil.extractActiveRole(token);
+        } catch (Exception e) {
+            // Token is invalid or cannot be parsed - treat as unauthenticated
+            return null;
+        }
     }
 
     /**

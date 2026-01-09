@@ -1,11 +1,16 @@
 package com.kissanmitra.service.impl;
 
+import com.kissanmitra.config.UserContext;
 import com.kissanmitra.domain.enums.DeviceStatus;
+import com.kissanmitra.domain.enums.OrderStatus;
 import com.kissanmitra.entity.Device;
 import com.kissanmitra.entity.DiscoveryIntent;
+import com.kissanmitra.entity.Order;
 import com.kissanmitra.entity.PricingRule;
+import com.kissanmitra.enums.UserRole;
 import com.kissanmitra.repository.DeviceRepository;
 import com.kissanmitra.repository.DiscoveryIntentRepository;
+import com.kissanmitra.repository.OrderRepository;
 import com.kissanmitra.service.DiscoveryService;
 import com.kissanmitra.service.PricingService;
 import com.kissanmitra.request.DiscoverySearchRequest;
@@ -25,8 +30,9 @@ import java.util.stream.Collectors;
  * Service implementation for discovery operations.
  *
  * <p>Business Context:
- * - Discovery is public and unauthenticated
+ * - Discovery supports both authenticated and unauthenticated users
  * - Location-based search using geospatial queries
+ * - Role-based device visibility (FARMER/VLE see leased, unauthenticated see unleased)
  * - Intent capture for pre-login interest
  */
 @Slf4j
@@ -42,7 +48,9 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     private final DeviceRepository deviceRepository;
     private final DiscoveryIntentRepository discoveryIntentRepository;
+    private final OrderRepository orderRepository;
     private final PricingService pricingService;
+    private final UserContext userContext;
 
     /**
      * Searches for devices based on location and filters.
@@ -51,11 +59,15 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      * - Uses lat/lng for both customer location and device location
      * - Default search radius: 50km (configurable)
      * - Only LIVE devices with active pricing rules appear in discovery
+     * - Devices with orders in unavailable states (ACCEPTED, PICKUP_SCHEDULED, ACTIVE, COMPLETED) are excluded
+     * - Role-based visibility: FARMER sees leased devices, VLE sees unleased devices, Unauthenticated/ADMIN see all devices
      * - Pagination: default 10 per page, max 20 per page
      *
      * <p>Uber Logic:
      * - Filters by status = LIVE
+     * - Role-based filtering: FARMER → leased devices, VLE → unleased devices, Unauthenticated/ADMIN → all devices
      * - Filters by active pricing rule exists (double validation)
+     * - Excludes devices with orders in unavailable states (ACCEPTED through COMPLETED)
      * - Calculates distance using Haversine formula
      * - Uses device pincode for pricing lookup
      * - Excludes devices without pricing rules from results
@@ -94,6 +106,30 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                     .collect(Collectors.toList());
         }
 
+        // BUSINESS DECISION: Role-based device visibility
+        // - FARMER: Only see devices that are leased (currentLeaseId != null)
+        // - VLE: Only see devices that are NOT leased (currentLeaseId == null) - to create LEASE orders
+        // - Unauthenticated: See all devices (no lease filter)
+        final String currentUserId = userContext.getCurrentUserId();
+        if (currentUserId != null) {
+            final UserRole activeRole = userContext.getCurrentUserActiveRole();
+            if (activeRole == UserRole.FARMER) {
+                // FARMER: Only see leased devices
+                devices = devices.stream()
+                        .filter(device -> device.getCurrentLeaseId() != null)
+                        .collect(Collectors.toList());
+                log.debug("Filtered devices for FARMER: showing only leased devices");
+            } else if (activeRole == UserRole.VLE) {
+                // VLE: Only see devices that are NOT leased (to create LEASE orders)
+                devices = devices.stream()
+                        .filter(device -> device.getCurrentLeaseId() == null)
+                        .collect(Collectors.toList());
+                log.debug("Filtered devices for VLE: showing only unleased devices");
+            }
+            // ADMIN and other roles: show all devices (no lease filter)
+        }
+        // Unauthenticated users: show all devices (no lease filter)
+
         // BUSINESS DECISION: Double validation - filter by active pricing rule exists
         // Devices without pricing rules are excluded from results (even if status is LIVE)
         devices = devices.stream()
@@ -108,6 +144,28 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                         log.debug("Excluding device {} from discovery - no active pricing rule", device.getId());
                     }
                     return hasPricingRule;
+                })
+                .collect(Collectors.toList());
+
+        // BUSINESS DECISION: Exclude devices with orders in unavailable states
+        // Devices with ACCEPTED, PICKUP_SCHEDULED, ACTIVE, or COMPLETED orders are not discoverable
+        // This prevents double-booking and ensures devices are only shown when truly available
+        devices = devices.stream()
+                .filter(device -> {
+                    final List<Order> orders = orderRepository.findByDeviceId(device.getId());
+                    if (orders == null || orders.isEmpty()) {
+                        return true; // No orders = available
+                    }
+                    // Check if device has any order in unavailable states
+                    final boolean hasUnavailableOrder = orders.stream()
+                            .anyMatch(order -> order.getStatus() == OrderStatus.ACCEPTED
+                                    || order.getStatus() == OrderStatus.PICKUP_SCHEDULED
+                                    || order.getStatus() == OrderStatus.ACTIVE
+                                    || order.getStatus() == OrderStatus.COMPLETED);
+                    if (hasUnavailableOrder) {
+                        log.debug("Excluding device {} from discovery - has unavailable order", device.getId());
+                    }
+                    return !hasUnavailableOrder;
                 })
                 .collect(Collectors.toList());
 

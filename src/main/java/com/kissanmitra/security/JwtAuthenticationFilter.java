@@ -45,7 +45,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String token = authHeader.substring(BEARER_PREFIX.length());
+        final String token = authHeader.substring(BEARER_PREFIX.length()).trim();
+
+        // BUSINESS DECISION: If token is empty/blank, treat as unauthenticated
+        // This allows public endpoints to work without token, and authenticated endpoints
+        // will fail later if they require authentication
+        if (token == null || token.isEmpty()) {
+            // No token provided - continue as unauthenticated user
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
             if (jwtUtil.validateToken(token)) {
@@ -56,15 +65,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 filterChain.doFilter(request, response);
             } else {
-                // Token is invalid - return 401 Unauthorized with proper error message
-                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        "Invalid or expired token", "Authentication failed");
+                // Token is invalid - clear any existing authentication
+                SecurityContextHolder.clearContext();
+                
+                // Token is invalid - for public endpoints, continue as unauthenticated
+                // For protected endpoints, Spring Security will handle 401
+                // Check if this is a public endpoint
+                final String requestPath = request.getRequestURI();
+                if (isPublicEndpoint(requestPath)) {
+                    // Public endpoint - continue as unauthenticated
+                    filterChain.doFilter(request, response);
+                } else {
+                    // Protected endpoint - return 401
+                    sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                            "Invalid or expired token", "Authentication failed");
+                }
             }
         } catch (Exception e) {
-            // Any error during token validation - return 401
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "Token validation failed", e.getMessage());
+            // Token parsing error - clear any existing authentication
+            SecurityContextHolder.clearContext();
+            
+            // Token parsing error - for public endpoints, continue as unauthenticated
+            final String requestPath = request.getRequestURI();
+            if (isPublicEndpoint(requestPath)) {
+                // Public endpoint - continue as unauthenticated (invalid token ignored)
+                filterChain.doFilter(request, response);
+            } else {
+                // Protected endpoint - return 401
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "Token validation failed", e.getMessage());
+            }
         }
+    }
+
+    /**
+     * Checks if the request path is a public endpoint.
+     *
+     * @param path request path
+     * @return true if public endpoint
+     */
+    private boolean isPublicEndpoint(final String path) {
+        return path != null && (
+                path.startsWith("/api/v1/auth/") ||
+                path.startsWith("/api/v1/public/") ||
+                path.startsWith("/public/")
+        );
     }
 
     private void sendErrorResponse(HttpServletResponse response, int status,

@@ -1,11 +1,15 @@
 package com.kissanmitra.service;
 
+import com.kissanmitra.config.UserContext;
 import com.kissanmitra.domain.enums.DeviceStatus;
+import com.kissanmitra.domain.enums.OrderStatus;
 import com.kissanmitra.domain.enums.OrderType;
 import com.kissanmitra.entity.Device;
 import com.kissanmitra.entity.DiscoveryIntent;
+import com.kissanmitra.entity.Order;
 import com.kissanmitra.repository.DeviceRepository;
 import com.kissanmitra.repository.DiscoveryIntentRepository;
+import com.kissanmitra.repository.OrderRepository;
 import com.kissanmitra.request.DiscoverySearchRequest;
 import com.kissanmitra.response.DiscoveryResponse;
 import com.kissanmitra.service.impl.DiscoveryServiceImpl;
@@ -16,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 
 import java.util.Collections;
@@ -43,6 +46,12 @@ class DiscoveryServiceTest {
 
     @Mock
     private DiscoveryIntentRepository discoveryIntentRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private UserContext userContext;
 
     @InjectMocks
     private DiscoveryServiceImpl discoveryService;
@@ -74,6 +83,11 @@ class DiscoveryServiceTest {
                 .location(locationInput)
                 .intent(intentInput)
                 .build();
+
+        // Default: unauthenticated user (null userId and activeRole)
+        // Use lenient() since not all tests use these mocks
+        lenient().when(userContext.getCurrentUserId()).thenReturn(null);
+        lenient().when(userContext.getCurrentUserActiveRole()).thenReturn(null);
     }
 
     @Test
@@ -84,6 +98,7 @@ class DiscoveryServiceTest {
         when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
         when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
         when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
+        lenient().when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of()); // No unavailable orders
 
         // When
         DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
@@ -105,6 +120,7 @@ class DiscoveryServiceTest {
         when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
         when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
         when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
+        lenient().when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of()); // No unavailable orders
 
         // When
         DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
@@ -131,6 +147,114 @@ class DiscoveryServiceTest {
     }
 
     @Test
+    void testSearchDevices_FiltersDevicesWithAcceptedOrder() {
+        // Given
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
+        
+        Order acceptedOrder = Order.builder()
+                .id("order-id")
+                .deviceId("device-id")
+                .status(OrderStatus.ACCEPTED)
+                .build();
+        when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of(acceptedOrder));
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertEquals(0, result.getResults().size()); // Device excluded due to ACCEPTED order
+    }
+
+    @Test
+    void testSearchDevices_FiltersDevicesWithPickupScheduledOrder() {
+        // Given
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
+        
+        Order scheduledOrder = Order.builder()
+                .id("order-id")
+                .deviceId("device-id")
+                .status(OrderStatus.PICKUP_SCHEDULED)
+                .build();
+        when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of(scheduledOrder));
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertEquals(0, result.getResults().size()); // Device excluded due to PICKUP_SCHEDULED order
+    }
+
+    @Test
+    void testSearchDevices_FiltersDevicesWithActiveOrder() {
+        // Given
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
+        
+        Order activeOrder = Order.builder()
+                .id("order-id")
+                .deviceId("device-id")
+                .status(OrderStatus.ACTIVE)
+                .build();
+        when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of(activeOrder));
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertEquals(0, result.getResults().size()); // Device excluded due to ACTIVE order
+    }
+
+    @Test
+    void testSearchDevices_FiltersDevicesWithCompletedOrder() {
+        // Given
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
+        
+        Order completedOrder = Order.builder()
+                .id("order-id")
+                .deviceId("device-id")
+                .status(OrderStatus.COMPLETED)
+                .build();
+        when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of(completedOrder));
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertEquals(0, result.getResults().size()); // Device excluded due to COMPLETED order
+    }
+
+    @Test
+    void testSearchDevices_AllowsDevicesWithClosedOrder() {
+        // Given - CLOSED orders should allow device to be discoverable
+        when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
+                .thenReturn(List.of(testDevice));
+        when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
+        when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
+        when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
+        
+        Order closedOrder = Order.builder()
+                .id("order-id")
+                .deviceId("device-id")
+                .status(OrderStatus.CLOSED)
+                .build();
+        lenient().when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of(closedOrder));
+
+        // When
+        DiscoveryResponse result = discoveryService.searchDevices(searchRequest);
+
+        // Then
+        assertEquals(1, result.getResults().size()); // Device included despite CLOSED order
+        assertEquals("device-id", result.getResults().get(0).getDeviceId());
+    }
+
+    @Test
     void testSearchDevices_NoResults() {
         // Given
         when(deviceRepository.findByLocationNearAndStatus(any(Point.class), any(Distance.class), eq(DeviceStatus.LIVE)))
@@ -152,6 +276,7 @@ class DiscoveryServiceTest {
         when(pricingService.hasActivePricingRule(anyString(), anyString())).thenReturn(true);
         when(pricingService.deriveOrderType(anyString(), any(), any())).thenReturn(OrderType.RENT);
         when(pricingService.getActivePricingForDevice(anyString(), any())).thenReturn(null);
+        lenient().when(orderRepository.findByDeviceId("device-id")).thenReturn(List.of()); // No unavailable orders
 
         DiscoverySearchRequest.SearchFilters filters = DiscoverySearchRequest.SearchFilters.builder()
                 .page(0)

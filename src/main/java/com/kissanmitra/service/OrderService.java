@@ -42,5 +42,37 @@ public interface OrderService {
      * @return updated order
      */
     Order updateOrderStatus(String id, UpdateOrderStatusRequest request);
+
+    /**
+     * Cancels an order by requester.
+     *
+     * @param id order ID
+     * @param note cancellation note
+     * @return cancelled order
+     */
+    Order cancelOrder(String id, String note);
+
+    /**
+     * Rejects an order by handler (Admin for LEASE, VLE for RENT).
+     *
+     * @param id order ID
+     * @param note rejection note
+     * @return rejected order
+     */
+    Order rejectOrder(String id, String note);
+
+    /**
+     * Gets all LEASE orders (for Admin).
+     *
+     * @return list of LEASE orders
+     */
+    List<Order> getLeaseOrders();
+
+    /**
+     * Gets all RENT orders assigned to current VLE.
+     *
+     * @return list of RENT orders
+     */
+    List<Order> getRentOrders();
 }
 

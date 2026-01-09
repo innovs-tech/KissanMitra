@@ -5,14 +5,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * Unit tests for MediaUploadService.
@@ -22,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class MediaUploadServiceTest {
 
+    @Mock
+    private S3Client s3Client;
+
     @InjectMocks
     private MediaUploadServiceImpl mediaUploadService;
 
@@ -29,6 +37,14 @@ class MediaUploadServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(mediaUploadService, "s3Bucket", "test-bucket");
         ReflectionTestUtils.setField(mediaUploadService, "s3Region", "us-east-1");
+        ReflectionTestUtils.setField(mediaUploadService, "s3Client", s3Client);
+        
+        // Mock S3 putObject to return a response (we're testing service logic, not actual S3 uploads)
+        // Using lenient() since some tests don't call upload (they test validation)
+        lenient().doReturn(null).when(s3Client).putObject(
+                any(software.amazon.awssdk.services.s3.model.PutObjectRequest.class),
+                any(software.amazon.awssdk.core.sync.RequestBody.class)
+        );
     }
 
     @Test
@@ -46,8 +62,9 @@ class MediaUploadServiceTest {
         assertNotNull(urls);
         assertEquals(2, urls.size());
         assertTrue(urls.get(0).contains("device-id"));
-        // URL format: https://test-bucket.s3.us-east-1.amazonaws.com/device-id/{timestamp}-{uuid}.{ext}
+        // URL format: https://test-bucket.s3.us-east-1.amazonaws.com/devices/device-id/{timestamp}-{uuid}.{ext}
         assertTrue(urls.get(0).startsWith("https://"));
+        assertTrue(urls.get(0).contains("devices/"));
         assertTrue(urls.get(0).contains(".jpg") || urls.get(0).contains(".jpeg"));
     }
 
@@ -122,7 +139,7 @@ class MediaUploadServiceTest {
     void testDeleteMedia() {
         // When - Should not throw exception
         assertDoesNotThrow(() -> {
-            mediaUploadService.deleteMedia("device-id", "https://test-bucket.s3.us-east-1.amazonaws.com/device-id/file.jpg");
+            mediaUploadService.deleteMedia("device-id", "https://test-bucket.s3.us-east-1.amazonaws.com/devices/device-id/file.jpg");
         });
     }
 
@@ -130,7 +147,7 @@ class MediaUploadServiceTest {
     void testSetPrimaryMedia() {
         // When - Should not throw exception
         assertDoesNotThrow(() -> {
-            mediaUploadService.setPrimaryMedia("device-id", "https://test-bucket.s3.us-east-1.amazonaws.com/device-id/file.jpg");
+            mediaUploadService.setPrimaryMedia("device-id", "https://test-bucket.s3.us-east-1.amazonaws.com/devices/device-id/file.jpg");
         });
     }
 }

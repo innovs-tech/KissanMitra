@@ -1,6 +1,6 @@
 package com.kissanmitra.service.impl;
 
-import com.kissanmitra.service.MediaUploadService;
+import com.kissanmitra.service.DocumentUploadService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,31 +20,30 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Implementation of MediaUploadService.
+ * Implementation of DocumentUploadService.
  *
  * <p>Business Context:
- * - Uploads media files (images/videos) to AWS S3
+ * - Uploads document files (PDFs, images) to AWS S3
  * - Validates file size and format
  * - Generates unique file names
  *
  * <p>Uber Logic:
  * - Validates file size and format
  * - Generates unique file names
- * - Uploads files to S3 and returns URLs
+ * - Uploads files to S3 under documents/ prefix and returns URLs
  */
 @Slf4j
 @Service
-public class MediaUploadServiceImpl implements MediaUploadService {
+public class DocumentUploadServiceImpl implements DocumentUploadService {
 
-    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-    private static final List<String> ALLOWED_IMAGE_FORMATS = Arrays.asList("jpg", "jpeg", "png");
-    private static final List<String> ALLOWED_VIDEO_FORMATS = Arrays.asList("mp4", "mov");
-    private static final int MAX_TOTAL_FILES = 20;
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final List<String> ALLOWED_FORMATS = Arrays.asList("pdf", "jpg", "jpeg", "png");
+    private static final int MAX_TOTAL_FILES = 10;
 
-    @Value("${aws.s3.bucket:devices-media}")
+    @Value("${aws.s3.bucket:kissan-mitra}")
     private String s3Bucket;
 
-    @Value("${aws.s3.region:us-east-1}")
+    @Value("${aws.s3.region:ap-south-1}")
     private String s3Region;
 
     @Value("${aws.s3.accessKey:}")
@@ -82,7 +81,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     }
 
     @Override
-    public List<String> uploadMedia(final String deviceId, final MultipartFile[] files) {
+    public List<String> uploadDocuments(final String entityType, final String entityId, final MultipartFile[] files) {
         if (files == null || files.length == 0) {
             throw new IllegalArgumentException("No files provided");
         }
@@ -97,26 +96,12 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
         for (final MultipartFile file : files) {
             validateFile(file);
-            final String url = uploadFile(deviceId, file);
+            final String url = uploadFile(entityType, entityId, file);
             uploadedUrls.add(url);
         }
 
-        log.info("Uploaded {} files for device {}", uploadedUrls.size(), deviceId);
+        log.info("Uploaded {} document files for {}/{}", uploadedUrls.size(), entityType, entityId);
         return uploadedUrls;
-    }
-
-    @Override
-    public void deleteMedia(final String deviceId, final String mediaUrl) {
-        // BUSINESS DECISION: Phase 1 - Log deletion, actual S3 deletion in future phase
-        log.info("Deleting media for device {}: {}", deviceId, mediaUrl);
-        // TODO: Implement S3 file deletion when AWS SDK is integrated
-    }
-
-    @Override
-    public void setPrimaryMedia(final String deviceId, final String mediaUrl) {
-        // BUSINESS DECISION: Primary media is managed at device entity level
-        // This method is for future use if needed for S3 metadata
-        log.info("Setting primary media for device {}: {}", deviceId, mediaUrl);
     }
 
     /**
@@ -142,14 +127,10 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         }
 
         final String extension = getFileExtension(originalFilename).toLowerCase();
-        final boolean isImage = ALLOWED_IMAGE_FORMATS.contains(extension);
-        final boolean isVideo = ALLOWED_VIDEO_FORMATS.contains(extension);
-
-        if (!isImage && !isVideo) {
+        if (!ALLOWED_FORMATS.contains(extension)) {
             throw new IllegalArgumentException(
-                    String.format("Unsupported file format: %s. Allowed: %s, %s",
-                            extension, String.join(", ", ALLOWED_IMAGE_FORMATS),
-                            String.join(", ", ALLOWED_VIDEO_FORMATS))
+                    String.format("Unsupported file format: %s. Allowed: %s",
+                            extension, String.join(", ", ALLOWED_FORMATS))
             );
         }
     }
@@ -159,13 +140,15 @@ public class MediaUploadServiceImpl implements MediaUploadService {
      *
      * <p>Business Decision:
      * - Uploads files to S3 using AWS SDK
+     * - Stores files under documents/ prefix for organization
      * - Returns S3 URL for uploaded file
      *
-     * @param deviceId device ID
+     * @param entityType entity type (e.g., "leases", "operators")
+     * @param entityId entity ID
      * @param file file to upload
      * @return S3 URL
      */
-    private String uploadFile(final String deviceId, final MultipartFile file) {
+    private String uploadFile(final String entityType, final String entityId, final MultipartFile file) {
         try {
             // Generate unique file name
             final String timestamp = String.valueOf(Instant.now().toEpochMilli());
@@ -173,8 +156,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             final String extension = getFileExtension(originalFilename);
             final String uniqueFilename = String.format("%s-%s.%s",
                     timestamp, UUID.randomUUID().toString().substring(0, 8), extension);
-            // BUSINESS DECISION: Store device media under devices/ prefix
-            final String s3Key = String.format("devices/%s/%s", deviceId, uniqueFilename);
+            // BUSINESS DECISION: Store documents under documents/ prefix
+            final String s3Key = String.format("documents/%s/%s/%s", entityType, entityId, uniqueFilename);
 
             // Upload to S3 if client is initialized
             if (s3Client != null) {
@@ -190,7 +173,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                 final String s3Url = String.format("https://%s.s3.%s.amazonaws.com/%s",
                         s3Bucket, s3Region, s3Key);
 
-                log.info("Successfully uploaded file to S3: {}", s3Url);
+                log.info("Successfully uploaded document to S3: {}", s3Url);
                 return s3Url;
             } else {
                 // Fallback: return placeholder URL if S3 not configured
@@ -200,7 +183,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                 throw new RuntimeException("S3 client not initialized. Please check AWS credentials.");
             }
         } catch (final Exception e) {
-            log.error("Error uploading file for device {}: {}", deviceId, e.getMessage(), e);
+            log.error("Error uploading file for {}/{}: {}", entityType, entityId, e.getMessage(), e);
             throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
     }

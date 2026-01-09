@@ -513,6 +513,7 @@ public class DeviceController {
         // Update device status
         final Device updated = device.toBuilder()
                 .status(newStatus)
+                .currentLeaseId(null)
                 .build();
         updated.setId(deviceId);
 

@@ -46,6 +46,12 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- AOP -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
 		<!-- Redis -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -57,6 +63,13 @@
 			<groupId>com.twilio.sdk</groupId>
 			<artifactId>twilio</artifactId>
 			<version>9.3.0</version>
+		</dependency>
+
+		<!-- AWS S3 SDK -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>2.20.0</version>
 		</dependency>
 
 		<!-- JWT -->

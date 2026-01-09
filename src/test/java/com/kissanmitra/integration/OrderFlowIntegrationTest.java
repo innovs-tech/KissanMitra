@@ -40,9 +40,16 @@ class OrderFlowIntegrationTest {
         assertTrue(draftNext.contains(OrderStatus.INTEREST_RAISED));
 
         var interestRaisedNext = OrderStateMachine.getAllowedNextStates(OrderStatus.INTEREST_RAISED);
-        assertEquals(2, interestRaisedNext.size());
+        assertEquals(4, interestRaisedNext.size());
         assertTrue(interestRaisedNext.contains(OrderStatus.UNDER_REVIEW));
         assertTrue(interestRaisedNext.contains(OrderStatus.ACCEPTED));
+        assertTrue(interestRaisedNext.contains(OrderStatus.REJECTED));
+        assertTrue(interestRaisedNext.contains(OrderStatus.CANCELLED));
+
+        var underReviewNext = OrderStateMachine.getAllowedNextStates(OrderStatus.UNDER_REVIEW);
+        assertEquals(2, underReviewNext.size());
+        assertTrue(underReviewNext.contains(OrderStatus.ACCEPTED));
+        assertTrue(underReviewNext.contains(OrderStatus.REJECTED));
 
         var closedNext = OrderStateMachine.getAllowedNextStates(OrderStatus.CLOSED);
         assertTrue(closedNext.isEmpty());

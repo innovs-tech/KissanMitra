@@ -23,8 +23,17 @@ class OrderStateMachineTest {
         // INTEREST_RAISED -> ACCEPTED
         assertTrue(OrderStateMachine.canTransition(OrderStatus.INTEREST_RAISED, OrderStatus.ACCEPTED));
 
+        // INTEREST_RAISED -> REJECTED
+        assertTrue(OrderStateMachine.canTransition(OrderStatus.INTEREST_RAISED, OrderStatus.REJECTED));
+
+        // INTEREST_RAISED -> CANCELLED
+        assertTrue(OrderStateMachine.canTransition(OrderStatus.INTEREST_RAISED, OrderStatus.CANCELLED));
+
         // UNDER_REVIEW -> ACCEPTED
         assertTrue(OrderStateMachine.canTransition(OrderStatus.UNDER_REVIEW, OrderStatus.ACCEPTED));
+
+        // UNDER_REVIEW -> REJECTED
+        assertTrue(OrderStateMachine.canTransition(OrderStatus.UNDER_REVIEW, OrderStatus.REJECTED));
 
         // ACCEPTED -> PICKUP_SCHEDULED
         assertTrue(OrderStateMachine.canTransition(OrderStatus.ACCEPTED, OrderStatus.PICKUP_SCHEDULED));
@@ -50,6 +59,12 @@ class OrderStateMachineTest {
         // CLOSED -> any state (terminal state)
         assertFalse(OrderStateMachine.canTransition(OrderStatus.CLOSED, OrderStatus.ACTIVE));
 
+        // REJECTED -> any state (terminal state)
+        assertFalse(OrderStateMachine.canTransition(OrderStatus.REJECTED, OrderStatus.ACCEPTED));
+
+        // CANCELLED -> any state (terminal state)
+        assertFalse(OrderStateMachine.canTransition(OrderStatus.CANCELLED, OrderStatus.ACCEPTED));
+
         // Same state (not a transition)
         assertFalse(OrderStateMachine.canTransition(OrderStatus.ACTIVE, OrderStatus.ACTIVE));
     }
@@ -68,9 +83,16 @@ class OrderStateMachineTest {
         assertTrue(draftNext.contains(OrderStatus.INTEREST_RAISED));
 
         final Set<OrderStatus> interestRaisedNext = OrderStateMachine.getAllowedNextStates(OrderStatus.INTEREST_RAISED);
-        assertEquals(2, interestRaisedNext.size());
+        assertEquals(4, interestRaisedNext.size());
         assertTrue(interestRaisedNext.contains(OrderStatus.UNDER_REVIEW));
         assertTrue(interestRaisedNext.contains(OrderStatus.ACCEPTED));
+        assertTrue(interestRaisedNext.contains(OrderStatus.REJECTED));
+        assertTrue(interestRaisedNext.contains(OrderStatus.CANCELLED));
+
+        final Set<OrderStatus> underReviewNext = OrderStateMachine.getAllowedNextStates(OrderStatus.UNDER_REVIEW);
+        assertEquals(2, underReviewNext.size());
+        assertTrue(underReviewNext.contains(OrderStatus.ACCEPTED));
+        assertTrue(underReviewNext.contains(OrderStatus.REJECTED));
 
         final Set<OrderStatus> closedNext = OrderStateMachine.getAllowedNextStates(OrderStatus.CLOSED);
         assertTrue(closedNext.isEmpty());

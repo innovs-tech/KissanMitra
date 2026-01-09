@@ -2,6 +2,7 @@ package com.kissanmitra.controller;
 
 import com.kissanmitra.entity.Order;
 import com.kissanmitra.enums.Response;
+import com.kissanmitra.request.CancelOrderRequest;
 import com.kissanmitra.request.CreateOrderRequest;
 import com.kissanmitra.request.UpdateOrderStatusRequest;
 import com.kissanmitra.response.BaseClientResponse;
@@ -83,6 +84,23 @@ public class OrderController {
             @Valid @RequestBody final UpdateOrderStatusRequest request
     ) {
         final Order order = orderService.updateOrderStatus(id, request);
+        return Response.SUCCESS.buildSuccess(generateRequestId(), order);
+    }
+
+    /**
+     * Cancels an order by requester.
+     *
+     * @param id order ID
+     * @param request cancellation request (optional note)
+     * @return cancelled order
+     */
+    @PostMapping("/{id}/cancel")
+    public BaseClientResponse<Order> cancelOrder(
+            @PathVariable final String id,
+            @RequestBody(required = false) final CancelOrderRequest request
+    ) {
+        final String note = request != null ? request.getNote() : null;
+        final Order order = orderService.cancelOrder(id, note);
         return Response.SUCCESS.buildSuccess(generateRequestId(), order);
     }
 }

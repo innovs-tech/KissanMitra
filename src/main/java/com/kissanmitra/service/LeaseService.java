@@ -2,6 +2,7 @@ package com.kissanmitra.service;
 
 import com.kissanmitra.entity.Lease;
 import com.kissanmitra.dto.OperatorAssignment;
+import com.kissanmitra.request.CreateLeaseRequest;
 
 import java.util.List;
 
@@ -13,10 +14,10 @@ public interface LeaseService {
     /**
      * Creates a lease from an approved LEASE order.
      *
-     * @param orderId approved order ID
+     * @param request lease creation request containing orderId and additional details
      * @return created lease
      */
-    Lease createLeaseFromOrder(String orderId);
+    Lease createLeaseFromOrder(CreateLeaseRequest request);
 
     /**
      * Gets lease by ID.
