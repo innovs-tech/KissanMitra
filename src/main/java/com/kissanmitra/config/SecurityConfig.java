@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/public/**").permitAll() // Master data dropdowns
                         .requestMatchers("/public/**").permitAll()
+                        // Actuator endpoints (for health checks and monitoring)
+                        .requestMatchers("/actuator/**").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
