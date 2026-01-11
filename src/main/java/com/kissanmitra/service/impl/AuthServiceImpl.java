@@ -79,9 +79,11 @@ public class AuthServiceImpl implements AuthService {
         Twilio.init(accountSid, authToken);
 
         // BUSINESS DECISION: Generate 6-digit OTP
-        final String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
+        // final String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
         // For development, we are returning 0000000 to save twilio 
-
+        // final String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
+        // For development, we are returning 0000000 to save twilio 
+        final String otp = "000000";
         // Save OTP for 5 minutes
         final String key = OTP_KEY_PREFIX + phoneNumber;
         otpStorage.set(key, otp, Duration.ofMinutes(OTP_EXPIRY_MINUTES));
