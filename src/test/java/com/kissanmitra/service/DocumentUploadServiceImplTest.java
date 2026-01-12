@@ -19,9 +19,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for DocumentUploadService.
@@ -40,7 +38,7 @@ class DocumentUploadServiceImplTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(documentUploadService, "s3Bucket", "test-bucket");
-        ReflectionTestUtils.setField(documentUploadService, "s3Region", "us-east-1");
+        ReflectionTestUtils.setField(documentUploadService, "s3Region", "ap-south-1");
         ReflectionTestUtils.setField(documentUploadService, "s3Client", s3Client);
 
         // Mock S3Client behavior for putObject

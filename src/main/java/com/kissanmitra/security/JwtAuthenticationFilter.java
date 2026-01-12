@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,7 @@ import java.util.UUID;
  * <p>Extracts JWT token from Authorization header and validates it.
  * Sets authentication in SecurityContext for downstream filters and controllers.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -37,6 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final FilterChain filterChain
     ) throws ServletException, IOException {
 
+        final String requestPath = request.getRequestURI();
         final String authHeader = request.getHeader("Authorization");
 
         // If no Authorization header, let it continue (might be public endpoint)
@@ -71,7 +74,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Token is invalid - for public endpoints, continue as unauthenticated
                 // For protected endpoints, Spring Security will handle 401
                 // Check if this is a public endpoint
-                final String requestPath = request.getRequestURI();
                 if (isPublicEndpoint(requestPath)) {
                     // Public endpoint - continue as unauthenticated
                     filterChain.doFilter(request, response);
@@ -86,7 +88,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             
             // Token parsing error - for public endpoints, continue as unauthenticated
-            final String requestPath = request.getRequestURI();
             if (isPublicEndpoint(requestPath)) {
                 // Public endpoint - continue as unauthenticated (invalid token ignored)
                 filterChain.doFilter(request, response);

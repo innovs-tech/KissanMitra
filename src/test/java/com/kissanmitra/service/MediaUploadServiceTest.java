@@ -17,7 +17,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.doReturn;
 
 /**
  * Unit tests for MediaUploadService.
@@ -36,7 +35,7 @@ class MediaUploadServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(mediaUploadService, "s3Bucket", "test-bucket");
-        ReflectionTestUtils.setField(mediaUploadService, "s3Region", "us-east-1");
+        ReflectionTestUtils.setField(mediaUploadService, "s3Region", "ap-south-1");
         ReflectionTestUtils.setField(mediaUploadService, "s3Client", s3Client);
         
         // Mock S3 putObject to return a response (we're testing service logic, not actual S3 uploads)
@@ -62,7 +61,7 @@ class MediaUploadServiceTest {
         assertNotNull(urls);
         assertEquals(2, urls.size());
         assertTrue(urls.get(0).contains("device-id"));
-        // URL format: https://test-bucket.s3.us-east-1.amazonaws.com/devices/device-id/{timestamp}-{uuid}.{ext}
+        // URL format: https://test-bucket.s3.ap-south-1.amazonaws.com/devices/device-id/{timestamp}-{uuid}.{ext}
         assertTrue(urls.get(0).startsWith("https://"));
         assertTrue(urls.get(0).contains("devices/"));
         assertTrue(urls.get(0).contains(".jpg") || urls.get(0).contains(".jpeg"));
@@ -139,7 +138,7 @@ class MediaUploadServiceTest {
     void testDeleteMedia() {
         // When - Should not throw exception
         assertDoesNotThrow(() -> {
-            mediaUploadService.deleteMedia("device-id", "https://test-bucket.s3.us-east-1.amazonaws.com/devices/device-id/file.jpg");
+            mediaUploadService.deleteMedia("device-id", "https://test-bucket.s3.ap-south-1.amazonaws.com/devices/device-id/file.jpg");
         });
     }
 
@@ -147,7 +146,7 @@ class MediaUploadServiceTest {
     void testSetPrimaryMedia() {
         // When - Should not throw exception
         assertDoesNotThrow(() -> {
-            mediaUploadService.setPrimaryMedia("device-id", "https://test-bucket.s3.us-east-1.amazonaws.com/devices/device-id/file.jpg");
+            mediaUploadService.setPrimaryMedia("device-id", "https://test-bucket.s3.ap-south-1.amazonaws.com/devices/device-id/file.jpg");
         });
     }
 }
