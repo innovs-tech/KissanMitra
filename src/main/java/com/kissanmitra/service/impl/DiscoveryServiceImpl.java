@@ -12,8 +12,10 @@ import com.kissanmitra.repository.DeviceRepository;
 import com.kissanmitra.repository.DiscoveryIntentRepository;
 import com.kissanmitra.repository.OrderRepository;
 import com.kissanmitra.service.DiscoveryService;
+import com.kissanmitra.service.MasterDataService;
 import com.kissanmitra.service.PricingService;
 import com.kissanmitra.request.DiscoverySearchRequest;
+import com.kissanmitra.response.DeviceDetailResponse;
 import com.kissanmitra.response.DiscoveryResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,6 +54,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     private final DiscoveryIntentRepository discoveryIntentRepository;
     private final OrderRepository orderRepository;
     private final PricingService pricingService;
+    private final MasterDataService masterDataService;
     private final UserContext userContext;
 
     /**
@@ -343,6 +348,159 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         // BUSINESS DECISION: Return null if no pricing rule found (not 0.0)
         // Devices without pricing rules are excluded from discovery results
         return null;
+    }
+
+    /**
+     * Gets comprehensive device details for detail view.
+     *
+     * <p>Business Context:
+     * - Public endpoint for viewing device details
+     * - Only LIVE devices visible to public (ONBOARDED visible to authenticated users)
+     * - Enriches deviceType and manufacturer with display names from master data
+     * - Includes full pricing rules and media information
+     *
+     * <p>Uber Logic:
+     * - Fetches device by ID
+     * - Validates device status (LIVE for public, ONBOARDED for authenticated)
+     * - Enriches with master data (DeviceType displayName, Manufacturer name)
+     * - Gets pricing rules (default + time-specific for current date)
+     * - Calculates distance if user location provided
+     * - Builds comprehensive response with all device information
+     *
+     * @param deviceId device ID
+     * @param userLat user's latitude (optional, for distance calculation)
+     * @param userLng user's longitude (optional, for distance calculation)
+     * @return device detail response
+     */
+    @Override
+    public DeviceDetailResponse getDeviceDetails(final String deviceId, final Double userLat, final Double userLng) {
+        log.info("Getting device details for deviceId: {}", deviceId);
+
+        // Fetch device by ID
+        final Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found with id: " + deviceId));
+
+        // BUSINESS DECISION: Only LIVE devices visible to public
+        // ONBOARDED devices visible to authenticated users
+        final String currentUserId = userContext.getCurrentUserId();
+        if (device.getStatus() != DeviceStatus.LIVE) {
+            if (device.getStatus() == DeviceStatus.ONBOARDED && currentUserId != null) {
+                // Allow authenticated users to see ONBOARDED devices
+                log.debug("Allowing authenticated user {} to view ONBOARDED device {}", currentUserId, deviceId);
+            } else {
+                throw new RuntimeException("Device is not available for viewing. Status: " + device.getStatus());
+            }
+        }
+
+        // Enrich with master data
+        DeviceDetailResponse.DeviceTypeInfo deviceTypeInfo = null;
+        if (device.getDeviceTypeId() != null) {
+            final var deviceTypeOpt = masterDataService.getDeviceTypeByCode(device.getDeviceTypeId());
+            if (deviceTypeOpt.isPresent()) {
+                final var deviceType = deviceTypeOpt.get();
+                deviceTypeInfo = DeviceDetailResponse.DeviceTypeInfo.builder()
+                        .code(deviceType.getCode())
+                        .displayName(deviceType.getDisplayName())
+                        .build();
+            } else {
+                // Fallback if master data not found
+                deviceTypeInfo = DeviceDetailResponse.DeviceTypeInfo.builder()
+                        .code(device.getDeviceTypeId())
+                        .displayName(device.getDeviceTypeId())
+                        .build();
+            }
+        }
+
+        DeviceDetailResponse.ManufacturerInfo manufacturerInfo = null;
+        if (device.getManufacturerId() != null) {
+            final var manufacturerOpt = masterDataService.getManufacturerByCode(device.getManufacturerId());
+            if (manufacturerOpt.isPresent()) {
+                final var manufacturer = manufacturerOpt.get();
+                manufacturerInfo = DeviceDetailResponse.ManufacturerInfo.builder()
+                        .code(manufacturer.getCode())
+                        .name(manufacturer.getName())
+                        .build();
+            } else {
+                // Fallback if master data not found
+                manufacturerInfo = DeviceDetailResponse.ManufacturerInfo.builder()
+                        .code(device.getManufacturerId())
+                        .name(device.getManufacturerId())
+                        .build();
+            }
+        }
+
+        // Build basic details
+        final DeviceDetailResponse.BasicDetails basicDetails = DeviceDetailResponse.BasicDetails.builder()
+                .name(device.getName())
+                .description(device.getDescription())
+                .deviceType(deviceTypeInfo)
+                .manufacturer(manufacturerInfo)
+                .owner(device.getOwner())
+                .manufacturedDate(device.getManufacturedDate())
+                .companyOwned(device.getCompanyOwned())
+                .requiresOperator(device.getRequiresOperator())
+                .build();
+
+        // Build media info
+        final DeviceDetailResponse.MediaInfo mediaInfo = DeviceDetailResponse.MediaInfo.builder()
+                .count(device.getMediaUrls() != null ? device.getMediaUrls().size() : 0)
+                .primaryUrl(device.getPrimaryMediaUrl())
+                .allUrls(device.getMediaUrls() != null ? device.getMediaUrls() : new ArrayList<>())
+                .build();
+
+        // Build location info (address and pincode only, NO coordinates)
+        final DeviceDetailResponse.LocationInfo locationInfo = DeviceDetailResponse.LocationInfo.builder()
+                .address(device.getAddress())
+                .pincode(device.getPincode())
+                .build();
+
+        // Get pricing information
+        PricingRule defaultRule = null;
+        List<PricingRule> timeSpecificRules = new ArrayList<>();
+        if (device.getDeviceTypeId() != null && device.getPincode() != null) {
+            defaultRule = pricingService.getDefaultRule(device.getDeviceTypeId(), device.getPincode());
+            timeSpecificRules = pricingService.getTimeSpecificRules(device.getDeviceTypeId(), device.getPincode(), LocalDate.now());
+        }
+
+        final DeviceDetailResponse.PricingInfo pricingInfo = DeviceDetailResponse.PricingInfo.builder()
+                .defaultRule(defaultRule)
+                .timeSpecificRules(timeSpecificRules)
+                .build();
+
+        // Build lease info
+        final DeviceDetailResponse.LeaseInfo leaseInfo = DeviceDetailResponse.LeaseInfo.builder()
+                .leaseState(device.getCurrentLeaseId() != null ? "LEASED" : "AVAILABLE")
+                .currentLeaseId(device.getCurrentLeaseId())
+                .build();
+
+        // Calculate distance if user location provided
+        DeviceDetailResponse.DistanceInfo distanceInfo = null;
+        if (userLat != null && userLng != null && device.getLocation() != null) {
+            final double distanceKm = calculateDistance(
+                    userLng, userLat,
+                    device.getLocation().getX(), device.getLocation().getY()
+            );
+            distanceInfo = DeviceDetailResponse.DistanceInfo.builder()
+                    .distanceKm(distanceKm)
+                    .build();
+        }
+
+        // Build operational info
+        final DeviceDetailResponse.OperationalInfo operationalInfo = DeviceDetailResponse.OperationalInfo.builder()
+                .operationalState(device.getOperationalState())
+                .build();
+
+        // Build comprehensive response
+        return DeviceDetailResponse.builder()
+                .deviceId(device.getId())
+                .basicDetails(basicDetails)
+                .media(mediaInfo)
+                .location(locationInfo)
+                .pricing(pricingInfo)
+                .lease(leaseInfo)
+                .distance(distanceInfo)
+                .operational(operationalInfo)
+                .build();
     }
 }
 

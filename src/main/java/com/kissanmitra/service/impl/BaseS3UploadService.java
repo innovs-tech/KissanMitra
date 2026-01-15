@@ -55,11 +55,16 @@ public abstract class BaseS3UploadService {
     @PostConstruct
     public void initS3Client() {
         try {
+            log.info("Initializing S3 client for bucket: {} in region: {}", s3Bucket, s3Region);
+            log.info("Access key: {}", accessKey);
+            log.info("Secret key: {}", secretKey);
+            
             // BUSINESS DECISION: Use IAM roles on ECS (default provider chain)
             // Fallback to access key/secret key only for local development
             if (accessKey != null && !accessKey.isEmpty()
                     && secretKey != null && !secretKey.isEmpty()) {
                 // Local development: Use explicit credentials
+                log.info("Using explicit credentials for S3 (local dev mode)");
                 AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
                 this.s3Client = S3Client.builder()
                         .region(Region.of(s3Region))
@@ -68,16 +73,26 @@ public abstract class BaseS3UploadService {
                 log.info("S3 client initialized with explicit credentials (local dev mode)");
             } else {
                 // Production (ECS): Use default credential provider chain (IAM task role)
+                log.info("Using default credential provider chain for S3 (IAM role on ECS)");
                 this.s3Client = S3Client.builder()
                         .region(Region.of(s3Region))
                         .build();
-                log.info("S3 client will use default credential provider chain (IAM role on ECS)");
+                log.info("S3 client built using default credential provider chain (IAM role on ECS)");
+            }
+
+            // Validate client was created
+            if (this.s3Client == null) {
+                throw new IllegalStateException("S3Client builder returned null");
             }
 
             log.info("S3 client initialized successfully for bucket: {} in region: {}", s3Bucket, s3Region);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid S3 configuration - region: {}, bucket: {}, error: {}", s3Region, s3Bucket, e.getMessage(), e);
+            throw new RuntimeException("Failed to initialize S3 client: Invalid configuration - " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Failed to initialize S3 client: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to initialize S3 client", e);
+            log.error("Failed to initialize S3 client - region: {}, bucket: {}, error: {}", s3Region, s3Bucket, e.getMessage(), e);
+            log.error("S3 initialization failed. Check: 1) IAM role attached to ECS task, 2) IAM role has S3 permissions, 3) Region is valid: {}", s3Region);
+            throw new RuntimeException("Failed to initialize S3 client: " + e.getMessage() + ". Check IAM role and permissions.", e);
         }
     }
 
@@ -112,11 +127,15 @@ public abstract class BaseS3UploadService {
                 log.info("Successfully uploaded file to S3: {}", s3Url);
                 return s3Url;
             } else {
-                // Fallback: return placeholder URL if S3 not configured
-                final String s3Url = String.format("https://%s.s3.%s.amazonaws.com/%s",
-                        s3Bucket, s3Region, s3Key);
-                log.warn("S3 client not initialized. Generated placeholder URL: {}", s3Url);
-                throw new RuntimeException("S3 client not initialized. Please check AWS credentials.");
+                // S3 client is null - this should not happen if initialization succeeded
+                log.error("S3 client is null. This indicates initialization failed. Bucket: {}, Region: {}", s3Bucket, s3Region);
+                log.error("Troubleshooting: 1) Check application startup logs for S3 initialization errors");
+                log.error("2) Verify ECS task has IAM role attached (taskRoleArn)");
+                log.error("3) Verify IAM role has S3 permissions for bucket: {}", s3Bucket);
+                log.error("4) Check CloudWatch logs for detailed error messages");
+                throw new RuntimeException(
+                        String.format("S3 client not initialized. Bucket: %s, Region: %s. Check IAM role and permissions.", 
+                                s3Bucket, s3Region));
             }
         } catch (final Exception e) {
             log.error("Error uploading file to S3: {}", e.getMessage(), e);
