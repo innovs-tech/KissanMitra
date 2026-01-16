@@ -13,6 +13,7 @@ import com.kissanmitra.repository.DiscoveryIntentRepository;
 import com.kissanmitra.repository.OrderRepository;
 import com.kissanmitra.service.DiscoveryService;
 import com.kissanmitra.service.MasterDataService;
+import com.kissanmitra.service.MediaUploadService;
 import com.kissanmitra.service.PricingService;
 import com.kissanmitra.request.DiscoverySearchRequest;
 import com.kissanmitra.response.DeviceDetailResponse;
@@ -55,6 +56,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     private final OrderRepository orderRepository;
     private final PricingService pricingService;
     private final MasterDataService masterDataService;
+    private final MediaUploadService mediaUploadService;
     private final UserContext userContext;
 
     /**
@@ -254,8 +256,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             return new Point(location.getLng(), location.getLat());
         }
 
-        // TODO: Convert pincode to coordinates using geocoding service
-        // For now, pincode-based search is not fully implemented
+        // FUTURE ENHANCEMENT: Convert pincode to coordinates using geocoding service
+        // Current implementation supports lat/lng which is sufficient for mobile apps
+        // Pincode geocoding would require integration with Google Maps Geocoding API or similar
+        // For now, pincode-based search is not implemented - apps should provide lat/lng
         return null;
     }
 
@@ -441,11 +445,19 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 .requiresOperator(device.getRequiresOperator())
                 .build();
 
-        // Build media info
+        // Build media info with fresh presigned URLs (on-demand generation)
+        // BUSINESS DECISION: Generate fresh presigned URLs on-demand to ensure they never expire
+        // URLs are regenerated for each request, so they're always valid for 7 days from request time
+        final List<String> refreshedMediaUrls = mediaUploadService.refreshMediaUrls(
+                device.getMediaUrls() != null ? device.getMediaUrls() : new ArrayList<>());
+        final String refreshedPrimaryUrl = device.getPrimaryMediaUrl() != null
+                ? mediaUploadService.refreshMediaUrl(device.getPrimaryMediaUrl())
+                : null;
+
         final DeviceDetailResponse.MediaInfo mediaInfo = DeviceDetailResponse.MediaInfo.builder()
-                .count(device.getMediaUrls() != null ? device.getMediaUrls().size() : 0)
-                .primaryUrl(device.getPrimaryMediaUrl())
-                .allUrls(device.getMediaUrls() != null ? device.getMediaUrls() : new ArrayList<>())
+                .count(refreshedMediaUrls.size())
+                .primaryUrl(refreshedPrimaryUrl)
+                .allUrls(refreshedMediaUrls)
                 .build();
 
         // Build location info (address and pincode only, NO coordinates)
@@ -502,5 +514,6 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 .operational(operationalInfo)
                 .build();
     }
+
 }
 

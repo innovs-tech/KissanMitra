@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of MediaUploadService.
@@ -57,16 +58,41 @@ public class MediaUploadServiceImpl extends BaseS3UploadService implements Media
 
     @Override
     public void deleteMedia(final String deviceId, final String mediaUrl) {
-        // BUSINESS DECISION: Phase 1 - Log deletion, actual S3 deletion in future phase
         log.info("Deleting media for device {}: {}", deviceId, mediaUrl);
-        // TODO: Implement S3 file deletion when AWS SDK is integrated
+        
+        // Extract S3 key from URL
+        final String s3Key = extractS3KeyFromUrl(mediaUrl);
+        if (s3Key == null) {
+            log.warn("Could not extract S3 key from media URL: {}, skipping S3 deletion", mediaUrl);
+            return;
+        }
+        
+        // Delete from S3
+        deleteFileFromS3(s3Key);
+        log.info("Successfully deleted media from S3 for device {}: {}", deviceId, s3Key);
     }
 
     @Override
     public void setPrimaryMedia(final String deviceId, final String mediaUrl) {
-        // BUSINESS DECISION: Primary media is managed at device entity level
-        // This method is for future use if needed for S3 metadata
-        log.info("Setting primary media for device {}: {}", deviceId, mediaUrl);
+        // BUSINESS DECISION: Primary media is managed at device entity level (DeviceController)
+        // This method exists for interface compliance but primary media is set via Device entity
+        // Future enhancement: Could add S3 metadata tagging if needed
+        log.info("Primary media set for device {}: {} (managed at entity level)", deviceId, mediaUrl);
+    }
+
+    @Override
+    public List<String> refreshMediaUrls(final List<String> storedUrls) {
+        if (storedUrls == null || storedUrls.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return storedUrls.stream()
+                .map(this::refreshMediaUrl)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public String refreshMediaUrl(final String storedUrl) {
+        return refreshPresignedUrl(storedUrl);
     }
 
     /**

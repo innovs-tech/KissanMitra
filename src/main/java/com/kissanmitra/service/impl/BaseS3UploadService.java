@@ -9,7 +9,12 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import java.time.Duration;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -43,6 +48,13 @@ public abstract class BaseS3UploadService {
     protected String secretKey;
 
     protected S3Client s3Client;
+    protected S3Presigner s3Presigner;
+
+    /**
+     * S3 URL format template for direct URLs.
+     * Format: https://{bucket}.s3.{region}.amazonaws.com/{key}
+     */
+    private static final String S3_URL_FORMAT = "https://%s.s3.%s.amazonaws.com/%s";
 
     /**
      * Initializes S3 client on application startup.
@@ -85,6 +97,20 @@ public abstract class BaseS3UploadService {
                 throw new IllegalStateException("S3Client builder returned null");
             }
 
+            // Initialize presigner for generating presigned URLs
+            if (accessKey != null && !accessKey.isEmpty()
+                    && secretKey != null && !secretKey.isEmpty()) {
+                AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
+                this.s3Presigner = S3Presigner.builder()
+                        .region(Region.of(s3Region))
+                        .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+                        .build();
+            } else {
+                this.s3Presigner = S3Presigner.builder()
+                        .region(Region.of(s3Region))
+                        .build();
+            }
+
             log.info("S3 client initialized successfully for bucket: {} in region: {}", s3Bucket, s3Region);
         } catch (IllegalArgumentException e) {
             log.error("Invalid S3 configuration - region: {}, bucket: {}, error: {}", s3Region, s3Bucket, e.getMessage(), e);
@@ -121,21 +147,34 @@ public abstract class BaseS3UploadService {
                 s3Client.putObject(putObjectRequest,
                         RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-                final String s3Url = String.format("https://%s.s3.%s.amazonaws.com/%s",
-                        s3Bucket, s3Region, s3Key);
+                // BUSINESS DECISION: Generate presigned URL instead of direct URL
+                // Direct URLs require public bucket access, but bucket blocks public access
+                // Presigned URLs allow temporary access without making bucket public
+                final String s3Url;
+                if (s3Presigner != null) {
+                    // Generate presigned URL (valid for 7 days)
+                    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                            .bucket(s3Bucket)
+                            .key(s3Key)
+                            .build();
+                    
+                    PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(
+                            presigner -> presigner
+                                    .signatureDuration(Duration.ofDays(7))
+                                    .getObjectRequest(getObjectRequest)
+                    );
+                    
+                    s3Url = presignedRequest.url().toString();
+                } else {
+                    // Fallback to direct URL (will fail if bucket blocks public access)
+                    s3Url = String.format(S3_URL_FORMAT, s3Bucket, s3Region, s3Key);
+                }
 
                 log.info("Successfully uploaded file to S3: {}", s3Url);
                 return s3Url;
             } else {
-                // S3 client is null - this should not happen if initialization succeeded
-                log.error("S3 client is null. This indicates initialization failed. Bucket: {}, Region: {}", s3Bucket, s3Region);
-                log.error("Troubleshooting: 1) Check application startup logs for S3 initialization errors");
-                log.error("2) Verify ECS task has IAM role attached (taskRoleArn)");
-                log.error("3) Verify IAM role has S3 permissions for bucket: {}", s3Bucket);
-                log.error("4) Check CloudWatch logs for detailed error messages");
-                throw new RuntimeException(
-                        String.format("S3 client not initialized. Bucket: %s, Region: %s. Check IAM role and permissions.", 
-                                s3Bucket, s3Region));
+                throwS3ClientNotInitializedException();
+                return null; // Never reached, but required for compilation
             }
         } catch (final Exception e) {
             log.error("Error uploading file to S3: {}", e.getMessage(), e);
@@ -169,6 +208,168 @@ public abstract class BaseS3UploadService {
             throw new IllegalArgumentException("File must have an extension");
         }
         return filename.substring(lastDotIndex + 1);
+    }
+
+    /**
+     * Generates a fresh presigned URL for an S3 key.
+     *
+     * <p>Business Decision:
+     * - Generates presigned URLs on-demand (valid for 7 days)
+     * - URLs are always fresh and never expire when generated on-demand
+     * - Used when returning device data to frontend
+     *
+     * @param s3Key S3 key (path) for the file
+     * @return presigned URL
+     */
+    public String generatePresignedUrl(final String s3Key) {
+        if (s3Presigner == null) {
+            log.warn("S3 presigner not initialized, returning direct URL (may not work if bucket blocks public access)");
+            return String.format(S3_URL_FORMAT, s3Bucket, s3Region, s3Key);
+        }
+
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(s3Bucket)
+                    .key(s3Key)
+                    .build();
+
+            PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(
+                    presigner -> presigner
+                            .signatureDuration(Duration.ofDays(7))
+                            .getObjectRequest(getObjectRequest)
+            );
+
+            return presignedRequest.url().toString();
+        } catch (Exception e) {
+            log.error("Failed to generate presigned URL for key: {}, error: {}", s3Key, e.getMessage(), e);
+            // Fallback to direct URL
+            return String.format(S3_URL_FORMAT, s3Bucket, s3Region, s3Key);
+        }
+    }
+
+    /**
+     * Extracts S3 key from S3 URL (presigned or direct).
+     *
+     * <p>Business Decision:
+     * - Supports both presigned URLs and direct S3 URLs
+     * - Used for backward compatibility with existing stored URLs
+     *
+     * @param s3Url S3 URL (presigned or direct)
+     * @return S3 key (path) or null if URL format is invalid
+     */
+    protected String extractS3KeyFromUrl(final String s3Url) {
+        if (s3Url == null || s3Url.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Handle presigned URLs: https://bucket.s3.region.amazonaws.com/key?X-Amz-...
+            // Handle direct URLs: https://bucket.s3.region.amazonaws.com/key
+            final String bucketPrefix = s3Bucket + ".s3.";
+            final int bucketIndex = s3Url.indexOf(bucketPrefix);
+            if (bucketIndex == -1) {
+                // Try alternative format: s3://bucket/key
+                if (s3Url.startsWith("s3://")) {
+                    final String withoutPrefix = s3Url.substring(5);
+                    final int slashIndex = withoutPrefix.indexOf('/');
+                    if (slashIndex != -1 && withoutPrefix.startsWith(s3Bucket + "/")) {
+                        return withoutPrefix.substring(s3Bucket.length() + 1);
+                    }
+                }
+                log.warn("Could not extract S3 key from URL: {}", s3Url);
+                return null;
+            }
+
+            // Extract key from URL
+            final String afterBucket = s3Url.substring(bucketIndex + bucketPrefix.length());
+            final int regionEndIndex = afterBucket.indexOf(".amazonaws.com/");
+            if (regionEndIndex == -1) {
+                log.warn("Invalid S3 URL format: {}", s3Url);
+                return null;
+            }
+
+            final String afterAmazonaws = afterBucket.substring(regionEndIndex + 15);
+            // Remove query parameters if present (for presigned URLs)
+            final int queryIndex = afterAmazonaws.indexOf('?');
+            final String s3Key = queryIndex != -1 ? afterAmazonaws.substring(0, queryIndex) : afterAmazonaws;
+
+            return s3Key;
+        } catch (Exception e) {
+            log.error("Error extracting S3 key from URL: {}, error: {}", s3Url, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Generates a fresh presigned URL from a stored S3 URL.
+     *
+     * <p>Business Decision:
+     * - Extracts S3 key from stored URL (backward compatible)
+     * - Generates fresh presigned URL (valid for 7 days)
+     * - Used when returning device data to frontend to ensure URLs never expire
+     *
+     * @param storedUrl stored S3 URL (presigned or direct)
+     * @return fresh presigned URL or original URL if extraction fails
+     */
+    public String refreshPresignedUrl(final String storedUrl) {
+        if (storedUrl == null || storedUrl.isEmpty()) {
+            return storedUrl;
+        }
+
+        final String s3Key = extractS3KeyFromUrl(storedUrl);
+        if (s3Key == null) {
+            log.warn("Could not extract S3 key from stored URL, returning original: {}", storedUrl);
+            return storedUrl;
+        }
+
+        return generatePresignedUrl(s3Key);
+    }
+
+    /**
+     * Throws exception when S3 client is not initialized.
+     *
+     * <p>Business Decision:
+     * - Centralized error handling for S3 client initialization failures
+     * - Provides detailed troubleshooting information
+     */
+    private void throwS3ClientNotInitializedException() {
+        log.error("S3 client is null. This indicates initialization failed. Bucket: {}, Region: {}", s3Bucket, s3Region);
+        log.error("Troubleshooting: 1) Check application startup logs for S3 initialization errors");
+        log.error("2) Verify ECS task has IAM role attached (taskRoleArn)");
+        log.error("3) Verify IAM role has S3 permissions for bucket: {}", s3Bucket);
+        log.error("4) Check CloudWatch logs for detailed error messages");
+        throw new RuntimeException(
+                String.format("S3 client not initialized. Bucket: %s, Region: %s. Check IAM role and permissions.", 
+                        s3Bucket, s3Region));
+    }
+
+    /**
+     * Deletes a file from S3.
+     *
+     * <p>Business Decision:
+     * - Deletes file from S3 bucket using AWS SDK
+     * - Used when media files are removed from devices
+     *
+     * @param s3Key S3 key (path) for the file to delete
+     * @throws RuntimeException if deletion fails or S3 client not initialized
+     */
+    protected void deleteFileFromS3(final String s3Key) {
+        if (s3Client == null) {
+            throwS3ClientNotInitializedException();
+        }
+
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(s3Bucket)
+                    .key(s3Key)
+                    .build();
+
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("Successfully deleted file from S3: {}", s3Key);
+        } catch (Exception e) {
+            log.error("Error deleting file from S3: {}, error: {}", s3Key, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete file from S3: " + e.getMessage(), e);
+        }
     }
 }
 

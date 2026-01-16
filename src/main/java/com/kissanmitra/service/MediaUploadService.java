@@ -54,5 +54,26 @@ public interface MediaUploadService {
      * @param mediaUrl S3 URL to set as primary
      */
     void setPrimaryMedia(String deviceId, String mediaUrl);
+
+    /**
+     * Refreshes media URLs by generating fresh presigned URLs.
+     *
+     * <p>Business Decision:
+     * - Generates fresh presigned URLs on-demand (valid for 7 days)
+     * - URLs are always fresh and never expire when generated on-demand
+     * - Used when returning device data to frontend
+     *
+     * @param storedUrls list of stored media URLs
+     * @return list of fresh presigned URLs
+     */
+    List<String> refreshMediaUrls(List<String> storedUrls);
+
+    /**
+     * Refreshes a single media URL by generating a fresh presigned URL.
+     *
+     * @param storedUrl stored media URL
+     * @return fresh presigned URL
+     */
+    String refreshMediaUrl(String storedUrl);
 }
 

@@ -2,9 +2,11 @@ package com.kissanmitra.controller;
 
 import com.kissanmitra.config.UserContext;
 import com.kissanmitra.entity.Lease;
+import com.kissanmitra.entity.VleProfile;
 import com.kissanmitra.enums.Response;
 import com.kissanmitra.response.BaseClientResponse;
 import com.kissanmitra.service.LeaseService;
+import com.kissanmitra.service.VleProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +26,7 @@ import static com.kissanmitra.util.CommonUtils.generateRequestId;
 public class LeaseController {
 
     private final LeaseService leaseService;
+    private final VleProfileService vleProfileService;
     private final UserContext userContext;
 
     /**
@@ -41,13 +44,30 @@ public class LeaseController {
     /**
      * Gets current user's leases (if VLE).
      *
+     * <p>Business Context:
+     * - Returns leases for the current authenticated user's VLE profile
+     * - User must have a VLE profile to access this endpoint
+     *
+     * <p>Uber Logic:
+     * - Gets current user ID from security context
+     * - Fetches VLE profile by user ID
+     * - Returns leases for that VLE
+     *
      * @return list of leases
      */
     @GetMapping("/me")
     public BaseClientResponse<List<Lease>> getMyLeases() {
-        // TODO: Get VLE ID from current user's VLE profile
-        final String vleId = "vle"; // Placeholder
-        final List<Lease> leases = leaseService.getLeasesByVleId(vleId);
+        final String userId = userContext.getCurrentUserId();
+        if (userId == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        final VleProfile vleProfile = vleProfileService.getVleProfileByUserId(userId);
+        if (vleProfile == null) {
+            throw new RuntimeException("VLE profile not found for current user");
+        }
+
+        final List<Lease> leases = leaseService.getLeasesByVleId(vleProfile.getId());
         return Response.SUCCESS.buildSuccess(generateRequestId(), leases);
     }
 }
